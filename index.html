@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Cockpit för Affärsrådgivare</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#534AB7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Cockpit">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f4f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    }
+
+    .container { max-width: 860px; margin: 0 auto; }
+
+    .api-banner {
+      background: #fff8e6; border: 1px solid #f0d080;
+      border-radius: 10px; padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .api-banner label { font-size: 13px; font-weight: 500; color: #7a5800; white-space: nowrap; }
+    .api-banner input {
+      flex: 1; min-width: 220px; font-size: 16px; padding: 7px 10px;
+      border-radius: 7px; border: 1px solid #d4b84a; background: #fffdf0;
+      color: #1a1a1a; font-family: monospace;
+    }
+    .api-banner input:focus { outline: none; border-color: #b89020; box-shadow: 0 0 0 2px rgba(184,144,32,0.2); }
+    .api-banner .hint { font-size: 12px; color: #9a7820; width: 100%; margin-top: 2px; }
+    .api-banner a { color: #7a5800; }
+    .api-banner .key-clear { font-size: 12px; text-decoration: underline; cursor: pointer; white-space: nowrap; }
+
+    header { margin-bottom: 1.5rem; }
+    header h1 { font-size: 22px; font-weight: 600; color: #1a1a1a; }
+    header p { font-size: 14px; color: #666; margin-top: 4px; }
+
+    /* Scenarios */
+    .scenario-section { margin-bottom: 12px; }
+    .scenario-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px; font-weight: 500; }
+    .scenario-row { display: flex; gap: 7px; flex-wrap: wrap; }
+    .chip {
+      font-size: 12px; padding: 5px 13px; border-radius: 20px;
+      border: 1px solid #ddd; background: #fff;
+      color: #555; cursor: pointer; transition: all 0.15s; user-select: none;
+    }
+    .chip:hover { border-color: #aaa; color: #222; }
+    .chip.active { background: #ede9ff; border-color: #7f77dd; color: #3c3489; font-weight: 500; }
+
+    /* Board */
+    .board-label { font-size: 13px; font-weight: 500; color: #444; margin: 1.5rem 0 0.75rem; }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .board-row2 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 1.25rem;
+    }
+
+    .advisor-card {
+      border: 2px solid #e5e5e5; border-radius: 12px;
+      padding: 12px 13px; cursor: pointer; transition: all 0.15s;
+      background: #fff; position: relative;
+      display: flex; flex-direction: column;
+    }
+    .advisor-card:hover { border-color: #bbb; }
+    .advisor-card.selected { border-color: #7f77dd; background: #ede9ff; }
+    .advisor-card.selected .advisor-name { color: #3c3489; }
+    .advisor-card.selected .advisor-desc { color: #5046a0; }
+    .advisor-card.synthesis-card { border-style: dashed; border-color: #c8b8f0; }
+    .advisor-card.synthesis-card:hover { border-color: #7f77dd; }
+    .advisor-card.synthesis-card.selected { border-style: solid; }
+
+    .card-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+    .card-title { flex: 1; }
+    .advisor-name { font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.3; }
+    .advisor-role { font-size: 11px; color: #888; margin-top: 1px; }
+    .advisor-tag { font-size: 10px; margin-top: 6px; padding: 2px 8px; border-radius: 10px; display: inline-block; font-weight: 600; }
+    .advisor-desc { font-size: 11px; color: #666; line-height: 1.5; margin-top: 6px; border-top: 1px solid #f0f0f0; padding-top: 7px; }
+    .advisor-card.selected .advisor-desc { border-top-color: #c8b8f0; }
+
+    .check { position: absolute; top: 9px; right: 9px; width: 17px; height: 17px; border-radius: 50%; background: #7f77dd; display: none; align-items: center; justify-content: center; }
+    .advisor-card.selected .check { display: flex; }
+    .check svg { width: 9px; height: 9px; }
+
+    /* Input */
+    .input-area { margin-bottom: 1rem; }
+    .input-area textarea {
+      width: 100%; min-height: 88px; resize: vertical;
+      font-size: 16px; padding: 10px 13px;
+      border-radius: 9px; border: 1px solid #ccc;
+      background: #fff; color: #1a1a1a;
+      font-family: inherit; line-height: 1.55; transition: border-color 0.15s;
+    }
+    .input-area textarea:focus { outline: none; border-color: #7f77dd; box-shadow: 0 0 0 3px rgba(127,119,221,0.12); }
+    .input-area textarea::placeholder { color: #aaa; }
+
+    .actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .sel-hint { font-size: 12px; color: #999; }
+    .btn-row { display: flex; gap: 8px; align-items: center; }
+    .btn-clear { font-size: 12px; color: #999; background: none; border: none; cursor: pointer; font-family: inherit; padding: 4px; }
+    .btn-clear:hover { color: #444; }
+    .btn-ask { font-size: 13px; padding: 9px 22px; border-radius: 8px; background: #534ab7; color: white; border: none; cursor: pointer; font-weight: 600; font-family: inherit; transition: opacity 0.15s; }
+    .btn-ask:hover { opacity: 0.87; }
+    .btn-ask:disabled { opacity: 0.38; cursor: not-allowed; }
+
+    /* Responses */
+    .responses { margin-top: 1.75rem; display: flex; flex-direction: column; gap: 1rem; }
+    .response-card { border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.1rem 1.25rem; background: #fff; animation: fadeUp 0.25s ease; }
+    .response-card.synthesis-result { border: 2px solid #7f77dd; background: #faf9ff; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .response-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .response-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+    .response-name { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+    .response-role { font-size: 11px; color: #888; }
+    .response-body { font-size: 14px; color: #222; line-height: 1.7; white-space: pre-wrap; }
+    .response-body.loading { color: #aaa; font-style: italic; }
+    .response-body.error { color: #a32d2d; }
+
+    .synthesis-divider { display: flex; align-items: center; gap: 12px; margin: 1.5rem 0 1rem; }
+    .synthesis-divider-line { flex: 1; height: 1px; background: #d0c8f5; }
+    .synthesis-divider-label { font-size: 11px; color: #7f77dd; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+
+    .section-divider { border: none; border-top: 1px solid #e5e5e5; margin: 1.75rem 0 0; }
+    .followup-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin: 0.75rem 0; }
+
+    @media (max-width: 620px) {
+      .board { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .board-row2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="api-banner">
+    <label for="apiKey">🔑 Din API-nyckel:</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off" />
+    <a href="#" id="clearKey" class="key-clear" hidden>Rensa nyckel</a>
+    <div class="hint">Hämta din nyckel på <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> — sparas bara lokalt i webbläsaren.</div>
+  </div>
+
+  <header>
+    <h1>Cockpit för Affärsrådgivare</h1>
+    <p>Få omedelbar coaching från ditt virtuella expertpanel</p>
+  </header>
+
+  <div class="scenario-section">
+    <div class="scenario-label">Prospektering</div>
+    <div class="scenario-row" id="chips-prospektering"></div>
+  </div>
+  <div class="scenario-section" style="margin-top:10px;">
+    <div class="scenario-label">Mötesöppning</div>
+    <div class="scenario-row" id="chips-mote"></div>
+  </div>
+  <div class="scenario-section" style="margin-top:10px;">
+    <div class="scenario-label">Köpresan &amp; Maktbasen</div>
+    <div class="scenario-row" id="chips-kopresa"></div>
+  </div>
+  <div class="scenario-section" style="margin-top:10px;">
+    <div class="scenario-label">Relationsresan</div>
+    <div class="scenario-row" id="chips-relation"></div>
+  </div>
+  <div class="scenario-section" style="margin-top:10px;">
+    <div class="scenario-label">Förhandling</div>
+    <div class="scenario-row" id="chips-forhandling"></div>
+  </div>
+  <div class="scenario-section" style="margin-top:10px;">
+    <div class="scenario-label">Invändningar &amp; avslut</div>
+    <div class="scenario-row" id="chips-avslut"></div>
+  </div>
+
+  <div class="board-label">Välj dina rådgivare</div>
+  <div class="board" id="advisorBoard"></div>
+  <div class="board-row2" id="advisorBoard2"></div>
+
+  <div class="input-area">
+    <textarea id="question" placeholder="Beskriv din situation eller utmaning — ju mer sammanhang, desto bättre coaching får du..."></textarea>
+  </div>
+
+  <div class="actions">
+    <span class="sel-hint" id="selHint">Välj 1–9 rådgivare ovan</span>
+    <div class="btn-row">
+      <button class="btn-clear" onclick="clearAll()">Rensa</button>
+      <button class="btn-ask" id="askBtn" onclick="askAdvisors()" disabled>Få coaching →</button>
+    </div>
+  </div>
+
+  <div class="responses" id="responses"></div>
+</div>
+
+<script>
+const scenarios = {
+  "chips-prospektering": [
+    { label: "Kontaktmail", text: "Jag ska skicka ett kontaktmail till en VD på ett medelstort företag som jag aldrig träffat. Hur skriver jag ett meddelande som faktiskt får svar?" },
+    { label: "LinkedIn-kontakt", text: "Jag vill ta kontakt med en potentiell kund via LinkedIn utan att verka säljig eller desperat. Hur formulerar jag mitt första meddelande?" },
+    { label: "Cold call", text: "Jag ska ringa kallt till en beslutsfattare på ett stort företag. Hur öppnar jag samtalet och tar mig förbi grindvakten?" },
+    { label: "Varm introduktion", text: "En befintlig kund har nämnt ett annat företag som kan vara intresserade. Hur ber jag om en varm introduktion på bästa sätt?" },
+    { label: "Socialt säljande", text: "Jag vill använda sociala medier mer systematiskt för att hitta och värma upp prospekt. Vad är ett bra angreppssätt?" }
+  ],
+  "chips-mote": [
+    { label: "Öppna med insikt", text: "Jag vill öppna mitt nästa kundmöte med en skarp insikt om deras bransch snarare än att prata om mitt erbjudande. Hur gör jag det på ett trovärdigt sätt?" },
+    { label: "Öppna med frågor", text: "Hur öppnar jag ett möte med kraftfulla frågor som direkt engagerar kunden och visar att jag förstår deras situation?" },
+    { label: "Öppna med agenda", text: "Hur sätter jag en agenda för mötet som känns strukturerad men inte stel, och som ger mig kontroll över processen?" },
+    { label: "Digitalt möte", text: "Det är stor skillnad att öppna ett videomöte jämfört med ett fysiskt möte. Hur skapar jag rätt stämning och engagemang digitalt?" },
+    { label: "Efter lång tystnad", text: "Jag ska träffa en kund igen efter att affären legat still i månader. Hur öppnar jag mötet utan att det känns awkward?" }
+  ],
+  "chips-kopresa": [
+    { label: "Kartlägg beslutsprocessen", text: "Jag behöver förstå hur kunden faktiskt fattar beslut internt — vem som är involverad, i vilken ordning, och vad som driver processen framåt. Hur kartlägger jag deras köpprocess?" },
+    { label: "Identifiera maktbasen", text: "Jag är ny i en kundrelation och behöver förstå vem som egentligen har makt och inflytande i organisationen. Hur kartlägger jag maktbasen på ett systematiskt sätt?" },
+    { label: "Utvärdera maktbasen", text: "Jag har identifierat ett antal nyckelkontakter hos kunden men vet inte hur jag ska bedöma deras faktiska inflytande, inställning till oss och potential. Hur utvärderar jag maktbasen?" },
+    { label: "Interna blockerare", text: "Kunden verkar köpvillig men processen stannar internt — någon eller något blockerar beslutet. Hur identifierar och hanterar jag interna blockerare hos kunden?" },
+    { label: "Bygga intern konsensus", text: "Det finns flera intressenter med delvis motstridiga agendor hos kunden. Hur hjälper jag min kontakt att bygga intern konsensus och driva processen framåt?" },
+    { label: "Förenkla kundens beslut", text: "Kunden verkar överväldigad av beslutet — för många alternativ, för mycket risk, för komplex intern process. Hur förenklar jag deras beslutssituation?" },
+    { label: "Kunden är redan informerad", text: "Kunden har gjort 80% av sin research innan vi träffas första gången. De vet redan vad de vill ha. Hur möter jag dem där de är och tillför värde?" },
+    { label: "Motstridiga intressenter", text: "Jag har flera kontakter hos kunden med olika prioriteringar och delvis motstridiga intressen. Hur navigerar jag mellan dem utan att förlora någon?" }
+  ],
+  "chips-relation": [
+    { label: "Från kontakt till sponsor", text: "Jag har en kontakt hos kunden som verkar positiv till oss men som inte aktivt förespråkar oss internt. Hur lyfter jag den personen till att bli en verklig sponsor och champion för oss?" },
+    { label: "Kall eller distanserad kontakt", text: "En av mina viktigaste kontakter hos kunden har blivit mer distanserad och svarar inte lika snabbt längre. Något har förändrats. Hur hanterar jag det?" },
+    { label: "Håll relationen varm", text: "Affären är stängd och nästa upphandling är 18 månader bort. Hur håller jag relationerna varma och förblir relevant utan att verka säljig under mellantiden?" },
+    { label: "Nyckelkontakt slutar", text: "Min viktigaste kontakt och sponsor hos kunden har precis meddelat att hen slutar. Hur hanterar jag detta personbyte utan att tappa förankring och förtroende?" },
+    { label: "Bred förankring", text: "Jag har en stark relation med en person i kundorganisationen men är orolig för att vara för beroende av denna enda kontakt. Hur bygger jag bredare förankring?" },
+    { label: "Utveckla individuella kontakter", text: "Jag har kontakter i maktbasen men relationerna är ytliga och transaktionella. Hur utvecklar jag djupare och mer genuina relationer med varje individ?" }
+  ],
+  "chips-forhandling": [
+    { label: "Rabatt i sista stund", text: "Vi är nästan i mål men kunden pressar plötsligt på en betydande rabatt och hotar att dra sig ur om vi inte går med. Hur hanterar jag det utan att ge bort marginalen?" },
+    { label: "Konkurrentbud", text: "Kunden visar upp ett lägre bud från en konkurrent och säger 'matcha det här eller så tar vi dem'. Hur svarar jag?" },
+    { label: "Tystnad som vapen", text: "I förhandlingen använder kunden tystnad och långa pauser som ett medvetet taktiskt verktyg för att pressa mig. Hur hanterar jag det?" },
+    { label: "Styrelsebeslut", text: "När vi är nära avslut säger kunden att de måste ha styrelsens godkännande — något de inte nämnt tidigare. Är det en taktik, och hur går jag vidare?" },
+    { label: "Omförhandling", text: "Kunden vill plötsligt omförhandla villkor som vi redan kommit överens om. Hur hanterar jag det utan att tappa kontrollen eller förlora affären?" },
+    { label: "Rätt avvägningar", text: "Inför en förhandling — hur tänker jag kring vad jag kan ge, vad jag ska hålla fast vid, och hur jag skapar ett utbyte som känns bra för båda parter?" },
+    { label: "Förhandla brett", text: "Kunden fokuserar bara på priset men jag vill flytta förhandlingen till att handla om leverans, betalvillkor, support och avtalslängd istället. Hur gör jag det?" },
+    { label: "Landa förhandlingen", text: "Vi har förhandlat länge och är nära en överenskommelse. Hur landar jag förhandlingen på ett sätt som känns bra för båda parter och inte skapar dålig stämning inför samarbetet?" }
+  ],
+  "chips-avslut": [
+    { label: "Prisinvändning", text: "Kunden sa 'ert pris är för högt' precis i slutet av en bra demo. Vad är mitt bästa drag?" },
+    { label: "Affär som stannat", text: "Jag har fastnat i utvärdering i 3 månader. Min kontaktperson har tystnat. Hur återknyter jag kontakten utan att vara påträngande?" },
+    { label: "Konkurrens på pris", text: "Jag håller på att förlora mot en konkurrent som underbud vårt pris med 30%. Kunden verkar bara bry sig om kostnad. Hur slåss jag tillbaka?" },
+    { label: "Ny beslutsfattare", text: "Beslutsfattaren har precis bytts ut — ny chef som jag aldrig träffat. Hur bygger jag snabbt trovärdighet och håller affären igång?" },
+    { label: "Skapa rörelse", text: "Min kund sa att de vill 'vänta till nästa kvartal'. Hur skapar jag brådska utan att vara påträngande?" }
+  ]
+};
+
+const advisors = [
+  {
+    id: "hopkins", name: "Tom Hopkins", role: "Affärsstängaren", emoji: "🎯",
+    tag: "Avslutsmästaren", tagBg: "#FAC775", tagColor: "#633806", avatarBg: "#FAEEDA",
+    desc: "Världens mest kände säljcoach. Ger konkreta, tekniska avslutstekniker och specifika formuleringar för att hantera invändningar och fråga efter affären — utan ursäkt.",
+    persona: `Du är Tom Hopkins, en av världens mest kända säljcoacher och författare. Du har utbildat över fem miljoner säljare globalt och är känd för dina mycket konkreta, tekniska avslutstekniker och din djupa övertygelse att försäljning är ett hantverk som kan läras och bemästras av vem som helst med rätt attityd och träning. Din filosofi bygger på att fråga efter affären — ofta och med specifika tekniker — samt att hantera invändningar som en naturlig del av köpprocessen snarare än ett hinder. Du är entusiastisk, uppmuntrande och alltid praktisk. Du refererar gärna till dina egna tekniker och böcker. Du svarar alltid på svenska.`
+  },
+  {
+    id: "strategist", name: "Priya Nair", role: "Strategen", emoji: "♟️",
+    tag: "Helhetsbild", tagBg: "#B5D4F4", tagColor: "#0C447C", avatarBg: "#E6F1FB",
+    desc: "Tänker i system och maktkartor. Hjälper dig ligga tre drag före — vem som egentligen bestämmer, vilka politiska dynamiker som spelar in, och hur du positionerar värde på rätt nivå.",
+    persona: `You are Priya Nair, "The Strategist" — a consultative sales coach who thinks in systems and power maps. Background in complex B2B sales and account strategy. Help salespeople think three moves ahead: real decision makers, political dynamics, multi-threaded relationships, executive-level value positioning. Thoughtful, structured, long-game focus. Always respond in Swedish.`
+  },
+  {
+    id: "empath", name: "Jordan Lee", role: "Empatikern", emoji: "🤝",
+    tag: "Förtroende först", tagBg: "#9FE1CB", tagColor: "#085041", avatarBg: "#E1F5EE",
+    desc: "Tror att de bästa säljarna är de bästa lyssnarna. Coachar i aktivt lyssnande, rätt frågor, emotionella signaler och att bygga förtroende som håller längre än en enskild affär.",
+    persona: `You are Jordan Lee, "The Empath" — a sales coach who believes the best salespeople are the best listeners. Customer psychology, genuine trust, true motivations, relationships that outlast any single deal. Active listening, better questions, emotional signals, making the customer feel understood. Warm but practical. Always respond in Swedish.`
+  },
+  {
+    id: "veteran", name: "Don Hargreaves", role: "Veteranen", emoji: "🏆",
+    tag: "Stridstestad", tagBg: "#F5C4B3", tagColor: "#712B13", avatarBg: "#FAECE7",
+    desc: "35 år i fält — från dörr-till-dörr till Fortune 500. Skär igenom teori och ger råd grundade i vad som faktiskt fungerar. Pragmatisk, ibland brysk, alltid ärlig.",
+    persona: `You are Don Hargreaves, "The Veteran" — no-nonsense sales coach with 35 years in the field. You've seen every trick, objection, and buyer type. Advice grounded in real experience, vivid analogies. You know what actually works vs what sounds good in a training room. Pragmatic, sometimes blunt, occasionally funny, always honest. Always respond in Swedish.`
+  },
+  {
+    id: "rackham", name: "Neil Rackham", role: "SPIN-metoden", emoji: "🔬",
+    tag: "Forskningsbaserad", tagBg: "#CECBF6", tagColor: "#3C3489", avatarBg: "#EEEDFE",
+    desc: "Analyserade 35 000 säljsamtal och hittade vad som faktiskt skiljer toppsäljare från övriga. Coachar genom SPIN-frågorna: Situation, Problem, Implication och Need-Payoff — för att kunden ska artikulera värdet själv.",
+    persona: `You are Neil Rackham, author of SPIN Selling. Your coaching is grounded in decades of empirical research on what separates top performers. Coach through the SPIN framework — Situation, Problem, Implication, Need-Payoff questions. In major sales, the seller's job is to develop implied needs into explicit needs through skilled questioning, not to pitch. Push back on sales myths with data. Reference SPIN concepts naturally. Always respond in Swedish.`
+  },
+  {
+    id: "big5", name: "Dr. Sofia Lindgren", role: "Beteendevetaren", emoji: "🧠",
+    tag: "Big 5 & psykologi", tagBg: "#C0DD97", tagColor: "#27500A", avatarBg: "#EAF3DE",
+    desc: "Specialiserad på Big Five/OCEAN-modellen i säljkontext. Hjälper dig läsa av kundens personlighetsprofil och anpassa kommunikation, tempo och argumentation efter om kunden är hög eller låg på Öppenhet, Samvetsgrannhet, Extraversion, Vänlighet och Neuroticism.",
+    persona: `Du är Dr. Sofia Lindgren, beteendevetare och psykolog med specialisering på personlighetspsykologi och Big Five-modellen (OCEAN) i säljsammanhang. Du hjälper säljare att snabbt läsa av och anpassa sitt beteende efter kundens personlighetsprofil — hög eller låg på Öppenhet, Samvetsgrannhet, Extraversion, Vänlighet och Neuroticism. Du ger konkreta råd om hur man kommunicerar, säljer och bygger förtroende med olika personlighetstyper. Du är analytisk, empatisk och vetenskapligt grundad men alltid praktisk och jordnära. Du svarar alltid på svenska.`
+  },
+  {
+    id: "challenger", name: "Alex Drummond", role: "Utmanaren", emoji: "⚡",
+    tag: "Challenger-metoden", tagBg: "#FFD6A5", tagColor: "#7A3800", avatarBg: "#FFF0E0",
+    desc: "Baserad på Challenger Sale (Dixon & Adamson). Utmanar kundens status quo med insikter de inte hade själva — omformulerar problemet, skapar konstruktiv spänning och driver kunden mot förändring.",
+    persona: `Du är Alex Drummond, säljcoach specialiserad på Challenger Sale-metoden utvecklad av Matthew Dixon och Brent Adamson. Din filosofi bygger på forskning som visar att de mest framgångsrika säljarna i komplexa B2B-affärer inte anpassar sig till kunden — de utmanar kundens världsbild med insikter kunden inte hade själv. Du coachar säljare att undervisa kunden (Teach), skräddarsy budskapet till individen (Tailor) och ta kontroll över säljprocessen (Take Control). Du uppmuntrar konstruktiv spänning — att säga saker kunden kanske inte vill höra men behöver höra. Du är direkt, skarp och intellektuellt driven. Du svarar alltid på svenska.`
+  },
+  {
+    id: "buyingcoach", name: "Dr. Lena Forsgren", role: "Köpcoachen", emoji: "🗺️",
+    tag: "Buying Enablement", tagBg: "#E8D5F5", tagColor: "#5C1A8A", avatarBg: "#F3EAFC",
+    desc: "Baserad på Gartner/Adamson Buying Enablement. Hjälper dig förstå och stödja kundens interna köpprocess — konsensubyggande, hantera interna blockerare och förenkla ett beslut som ofta är mer komplext internt hos kunden än i din säljprocess.",
+    persona: `Du är Dr. Lena Forsgren, expert på Buying Enablement och komplex B2B-köppsykologi, baserad på Gartner-forskning av Brent Adamson och Nick Toman. Din filosofi bygger på insikten att B2B-köp idag involverar 6–10 beslutsfattare med olika agendor, och att den största utmaningen inte är att sälja — utan att hjälpa kunden navigera sin egen interna köpprocess. Du coachar säljare att ge kunden rätt information, verktyg och stöd för att fatta och förankra beslut internt. Du fokuserar på att identifiera och hjälpa hantera interna blockerare, förenkla beslutsvägen och stödja kundens champion. Du är analytisk, strukturerad och alltid kundfokuserad. Du svarar alltid på svenska.`
+  },
+  {
+    id: "synthesis_profile", name: "Sammanvävt råd", role: "Panelens samlade visdom", emoji: "⚖️",
+    tag: "Balanserad helhetsbild", tagBg: "#E8E4FF", tagColor: "#3c3489", avatarBg: "#EEEDFE",
+    desc: "Välj denna för ett direkt balanserat råd utan att välja enskilda rådgivare. Väger samman alla perspektiv — var panelen är överens, var den skiljer sig åt — och ger max 3 konkreta nästa steg.",
+    isSynthesisProfile: true,
+    persona: `Du är en neutral, erfaren säljstrateg med djup kunskap om hela säljprocessen — från prospektering och relationsbyggande till förhandling och avslut. Du har studerat och integrerat insikterna från Tom Hopkins (avslutstekniker), Neil Rackham (SPIN-frågemetodik), Challenger Sale (utmana status quo), Buying Enablement (stödja kundens interna process), strategisk B2B-försäljning, kundpsykologi och Big Five-personlighetsmodellen. Din uppgift är att ge ett balanserat, väl avvägt råd som väger samman dessa perspektiv. Du lyfter fram var olika skolor är överens, påpekar när rådet beror på kontexten, och avslutar alltid med max 3 tydliga, handlingsinriktade nästa steg. Du svarar alltid på svenska.`
+  }
+];
+
+const regularAdvisors = advisors.filter(a => !a.isSynthesisProfile);
+const synthesisAdvisor = advisors.find(a => a.isSynthesisProfile);
+
+let selected = new Set();
+let conversationHistory = [];
+
+function renderScenarios() {
+  Object.entries(scenarios).forEach(([id, chips]) => {
+    const container = document.getElementById(id);
+    container.innerHTML = chips.map(c => `
+      <span class="chip" data-text="${c.text.replace(/"/g, '&quot;')}">${c.label}</span>
+    `).join('');
+    container.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        document.getElementById('question').value = chip.dataset.text;
+        updateUI();
+      });
+    });
+  });
+}
+
+function cardHTML(a) {
+  return `
+    <div class="advisor-card${a.isSynthesisProfile ? ' synthesis-card' : ''}" id="card-${a.id}" onclick="toggleAdvisor('${a.id}')">
+      <div class="check">
+        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="card-top">
+        <div class="avatar" style="background:${a.avatarBg}">${a.emoji}</div>
+        <div class="card-title">
+          <div class="advisor-name">${a.name}</div>
+          <div class="advisor-role">${a.role}</div>
+          <div class="advisor-tag" style="background:${a.tagBg};color:${a.tagColor}">${a.tag}</div>
+        </div>
+      </div>
+      <div class="advisor-desc">${a.desc}</div>
+    </div>
+  `;
+}
+
+function renderBoard() {
+  document.getElementById('advisorBoard').innerHTML = regularAdvisors.map(cardHTML).join('');
+  document.getElementById('advisorBoard2').innerHTML = cardHTML(synthesisAdvisor);
+}
+
+function toggleAdvisor(id) {
+  selected.has(id) ? selected.delete(id) : selected.add(id);
+  document.getElementById('card-' + id).classList.toggle('selected', selected.has(id));
+  updateUI();
+}
+
+function updateUI() {
+  const n = selected.size;
+  document.getElementById('selHint').textContent = n === 0
+    ? 'Välj 1–9 rådgivare ovan'
+    : `${n} rådgivare ${n > 1 ? 'valda' : 'vald'}`;
+  document.getElementById('askBtn').disabled =
+    n === 0 || document.getElementById('question').value.trim() === '';
+}
+
+document.getElementById('question').addEventListener('input', updateUI);
+
+function clearAll() {
+  selected.clear();
+  document.querySelectorAll('.advisor-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('question').value = '';
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('responses').innerHTML = '';
+  conversationHistory = [];
+  updateUI();
+}
+
+async function callAPI(apiKey, systemPrompt, messages) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2000,
+      system: systemPrompt,
+      messages
+    })
+  });
+  const data = await res.json();
+  if (data?.content?.[0]?.text) return data.content[0].text;
+  if (data?.error) throw new Error(`${data.error.type}: ${data.error.message}`);
+  throw new Error('Oväntat svar från API.');
+}
+
+async function askAdvisors() {
+  const question = document.getElementById('question').value.trim();
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Ange din API-nyckel i fältet högst upp på sidan.'); return; }
+  if (!question || selected.size === 0) return;
+
+  // Spara nyckeln första gången användaren kör coaching
+  if (loadSavedKey() !== apiKey) { saveKey(apiKey); updateClearLink(); }
+
+  const btn = document.getElementById('askBtn');
+  btn.disabled = true;
+  btn.textContent = 'Frågar...';
+
+  const responsesEl = document.getElementById('responses');
+
+  if (conversationHistory.length > 0) {
+    const hr = document.createElement('hr'); hr.className = 'section-divider';
+    const lbl = document.createElement('div'); lbl.className = 'followup-label'; lbl.textContent = 'Följdfråga';
+    responsesEl.appendChild(hr);
+    responsesEl.appendChild(lbl);
+  }
+
+  conversationHistory.push({ role: "user", content: question });
+
+  const selectedAdvisors = advisors.filter(a => selected.has(a.id));
+  const selectedRegular = selectedAdvisors.filter(a => !a.isSynthesisProfile);
+  const hasSynthesisProfile = selectedAdvisors.some(a => a.isSynthesisProfile);
+  const hasMultipleRegular = selectedRegular.length >= 2;
+
+  selectedAdvisors.forEach(a => {
+    const card = document.createElement('div');
+    card.className = `response-card${a.isSynthesisProfile ? ' synthesis-result' : ''}`;
+    card.innerHTML = `
+      <div class="response-header">
+        <div class="response-avatar" style="background:${a.avatarBg}">${a.emoji}</div>
+        <div>
+          <div class="response-name">${a.name}</div>
+          <div class="response-role">${a.role}</div>
+        </div>
+      </div>
+      <div class="response-body loading" id="body-${a.id}">Tänker...</div>
+    `;
+    responsesEl.appendChild(card);
+  });
+
+  const advisorResponses = {};
+  await Promise.all(selectedRegular.map(async a => {
+    const bodyEl = document.getElementById('body-' + a.id);
+    try {
+      const text = await callAPI(apiKey, a.persona, conversationHistory);
+      bodyEl.className = 'response-body';
+      bodyEl.textContent = text;
+      advisorResponses[a.name] = text;
+    } catch (e) {
+      bodyEl.className = 'response-body error';
+      bodyEl.textContent = `Fel: ${e.message}`;
+    }
+  }));
+
+  if (hasSynthesisProfile) {
+    const bodyEl = document.getElementById('body-' + synthesisAdvisor.id);
+    try {
+      const text = await callAPI(apiKey, synthesisAdvisor.persona, conversationHistory);
+      bodyEl.className = 'response-body';
+      bodyEl.textContent = text;
+    } catch (e) {
+      bodyEl.className = 'response-body error';
+      bodyEl.textContent = `Fel: ${e.message}`;
+    }
+  }
+
+  if (hasMultipleRegular && Object.keys(advisorResponses).length >= 2) {
+    const divider = document.createElement('div');
+    divider.className = 'synthesis-divider';
+    divider.innerHTML = `
+      <div class="synthesis-divider-line"></div>
+      <div class="synthesis-divider-label">⚖️ Sammanvävt råd</div>
+      <div class="synthesis-divider-line"></div>
+    `;
+    responsesEl.appendChild(divider);
+
+    const synthCard = document.createElement('div');
+    synthCard.className = 'response-card synthesis-result';
+    synthCard.innerHTML = `
+      <div class="response-header">
+        <div class="response-avatar" style="background:#EEEDFE">⚖️</div>
+        <div>
+          <div class="response-name">Sammanvävt råd</div>
+          <div class="response-role">Panelens samlade bedömning</div>
+        </div>
+      </div>
+      <div class="response-body loading" id="body-auto-synthesis">Väger samman perspektiven...</div>
+    `;
+    responsesEl.appendChild(synthCard);
+
+    const advisorSummary = Object.entries(advisorResponses)
+      .map(([name, response]) => `### ${name}\n${response}`)
+      .join('\n\n');
+
+    const synthesisPrompt = `Du är en neutral och erfaren säljstrateg. Nedan finns råd om samma säljsituation från ${selectedRegular.length} olika rådgivare med olika perspektiv och metodik. Din uppgift är att:
+
+1. Kort identifiera var rådgivarna är överens (gemensamma insikter)
+2. Lyfta fram de viktigaste skillnaderna i perspektiv, om sådana finns
+3. Ge ett tydligt, handlingsinriktat Sammanvävt råd som tar det bästa från alla perspektiv
+4. Avsluta med max 3 konkreta nästa steg
+
+Håll svaret fokuserat och handlingsorienterat. Undvik att bara sammanfatta — syntetisera. Svara på svenska.
+
+---
+Frågan som ställdes: ${question}
+
+---
+Rådgivarnas svar:
+${advisorSummary}`;
+
+    try {
+      const synthText = await callAPI(apiKey, synthesisPrompt, [{ role: "user", content: "Gör din sammanvägda analys." }]);
+      document.getElementById('body-auto-synthesis').className = 'response-body';
+      document.getElementById('body-auto-synthesis').textContent = synthText;
+    } catch (e) {
+      document.getElementById('body-auto-synthesis').className = 'response-body error';
+      document.getElementById('body-auto-synthesis').textContent = `Fel: ${e.message}`;
+    }
+  }
+
+  conversationHistory.push({ role: "assistant", content: `[Panelen svarade på: ${question}]` });
+
+  btn.disabled = false;
+  btn.textContent = 'Få coaching →';
+  document.getElementById('question').value = '';
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  updateUI();
+}
+
+// ── API-nyckel i localStorage ────────────────────────────────────────
+const KEY_STORAGE = 'cockpit.apiKey';
+
+function loadSavedKey() {
+  try { return localStorage.getItem(KEY_STORAGE) || ''; } catch (e) { return ''; }
+}
+function saveKey(val) {
+  try { localStorage.setItem(KEY_STORAGE, val); } catch (e) {}
+}
+function updateClearLink() {
+  const hasKey = document.getElementById('apiKey').value.trim() || loadSavedKey();
+  document.getElementById('clearKey').hidden = !hasKey;
+}
+
+const apiKeyInput = document.getElementById('apiKey');
+const savedKey = loadSavedKey();
+if (savedKey) apiKeyInput.value = savedKey;
+apiKeyInput.addEventListener('input', updateClearLink);
+document.getElementById('clearKey').addEventListener('click', e => {
+  e.preventDefault();
+  try { localStorage.removeItem(KEY_STORAGE); } catch (err) {}
+  apiKeyInput.value = '';
+  updateClearLink();
+  apiKeyInput.focus();
+});
+updateClearLink();
+
+renderScenarios();
+renderBoard();
+updateUI();
+
+// ── PWA: service worker ──────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
