@@ -144,22 +144,138 @@
       .board { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .board-row2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
+
+    /* Svar: sammanfattning + förklaring */
+    .round { display: flex; flex-direction: column; gap: 1rem; }
+    .response-body.structured { white-space: normal; }
+    .ans-summary { background: #ede9ff; border: 1px solid #d5ccf5; border-radius: 10px; padding: 11px 15px; margin-bottom: 14px; }
+    .ans-summary-title, .ans-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
+    .ans-summary-title { color: #534ab7; margin-bottom: 5px; }
+    .ans-summary ul { list-style: disc; padding-left: 1.15em; }
+    .ans-summary li { font-size: 14px; line-height: 1.55; color: #26215c; margin-top: 3px; }
+    .ans-label { color: #888; margin-bottom: 5px; }
+    .ans-text { white-space: pre-wrap; }
+
+    /* Mobilens delar: dolda på dator */
+    [hidden] { display: none !important; }
+    .m-header, .m-scenarios, .m-hint, .m-tabs, .m-bar, .m-only, .ans-toggle,
+    .sheet-backdrop, .desc-sheet { display: none; }
+  </style>
+  <style id="mobileCss" media="(max-width: 700px)">
+    html, body { height: 100%; }
+    body { padding: 0; height: 100vh; height: 100dvh; overflow: hidden; }
+    .container { display: flex; flex-direction: column; height: 100vh; height: 100dvh; max-width: none; margin: 0; }
+
+    header, .scenario-section, .board-label, .actions { display: none; }
+
+    /* Toppfält */
+    .m-header { display: flex; align-items: center; gap: 2px; padding: calc(4px + env(safe-area-inset-top)) 6px 2px 14px; min-height: 52px; flex-shrink: 0; }
+    body:not([data-step="1"]) .m-header { padding-left: 2px; }
+    .m-title { flex: 1; font-size: 18px; font-weight: 600; }
+    .m-count { display: none; font-size: 13px; color: #777; margin-right: 2px; }
+    body[data-step="2"] .m-count { display: block; }
+    .m-icon { background: none; border: none; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #444; cursor: pointer; border-radius: 12px; flex-shrink: 0; }
+    .m-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    body[data-step="1"] #mBack { display: none; }
+    #mAction .i-trash { display: none; }
+    body[data-step="3"] #mAction .i-gear { display: none; }
+    body[data-step="3"] #mAction .i-trash { display: block; }
+
+    /* Vilka delar som syns i vilket steg */
+    .m-scenarios, .input-area, #advisorWrap, .m-hint, .m-tabs, .responses, .mb1, .mb2, .mb3 { display: none; }
+
+    /* Steg 1: situation */
+    body[data-step="1"] .m-scenarios { display: flex; flex-direction: column; gap: 7px; padding: 2px 12px 8px; overflow-y: auto; min-height: 0; flex: 0 1 auto; }
+    body[data-step="1"] .input-area { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 84px; padding: 0 12px 10px; margin: 0; }
+    .input-area textarea { flex: 1; resize: none; min-height: 72px; }
+    .m-field label { display: block; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; margin-bottom: 3px; }
+    .m-field select { width: 100%; height: 42px; font-size: 16px; padding: 0 10px; border: 1px solid #ccc; border-radius: 10px; background: #fff; color: #555; font-family: inherit; }
+    .m-field select.has { border-color: #7f77dd; background: #faf9ff; color: #3c3489; font-weight: 500; }
+
+    /* Steg 2: rådgivare (3 x 3) */
+    .board, .board-row2 { display: contents; }
+    body[data-step="2"] #advisorWrap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 4px 12px; align-content: center; flex: 1; min-height: 0; overflow-y: auto; }
+    body[data-step="2"] .m-hint { display: block; text-align: center; font-size: 12px; color: #999; padding: 6px 12px 8px; }
+    .advisor-card { padding: 10px 4px 8px; align-items: center; text-align: center; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+    .card-top { flex-direction: column; align-items: center; gap: 5px; margin-bottom: 0; }
+    .avatar { margin-top: 0; width: 40px; height: 40px; font-size: 19px; }
+    .card-title { flex: 0 1 auto; text-align: center; }
+    .advisor-name { font-size: 12px; }
+    .advisor-role, .advisor-tag, .advisor-desc { display: none; }
+    .check { top: 5px; right: 5px; }
+
+    /* Steg 3: svar i flikar */
+    body[data-step="3"] .m-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 2px 12px 8px; flex-shrink: 0; }
+    .m-tab { font-family: inherit; font-size: 14px; padding: 7px 14px; border-radius: 20px; border: 1px solid #ddd; background: #fff; color: #555; white-space: nowrap; cursor: pointer; }
+    .m-tab.on { background: #ede9ff; border-color: #7f77dd; color: #3c3489; font-weight: 600; }
+    body[data-step="3"] .responses { display: block; flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0 12px 10px; -webkit-overflow-scrolling: touch; }
+    .round { display: block; }
+    .round:not(:last-child) { display: none; }
+    .round .response-card { display: none; }
+    .round .response-card.m-active { display: block; }
+    .synthesis-divider, .section-divider, .followup-label { display: none; }
+    .response-body { font-size: 15px; }
+    .ans-toggle { display: block; width: 100%; font-family: inherit; font-size: 14px; font-weight: 500; color: #534ab7; background: none; border: 1px solid #d5ccf5; border-radius: 10px; padding: 10px; margin: 0 0 14px; cursor: pointer; }
+    .structured:not(.expanded) .ans-detail { display: none; }
+    .ans-summary { margin-bottom: 10px; }
+    .ans-summary li { font-size: 15px; }
+
+    /* Nedre fält */
+    .m-bar { display: block; flex-shrink: 0; padding: 8px 12px calc(10px + env(safe-area-inset-bottom)); background: #f5f4f0; border-top: 1px solid #e5e5e5; }
+    body[data-step="1"] .mb1, body[data-step="2"] .mb2 { display: block; }
+    body[data-step="3"] .mb3 { display: flex; gap: 8px; }
+    .m-cta { width: 100%; padding: 14px; font-size: 16px; font-weight: 600; font-family: inherit; border: none; border-radius: 12px; background: #534ab7; color: #fff; cursor: pointer; }
+    .m-cta:disabled { opacity: 0.38; }
+    .mb3 input { flex: 1; min-width: 0; font-size: 16px; font-family: inherit; padding: 12px 14px; border: 1px solid #ccc; border-radius: 12px; background: #fff; }
+    .m-send { width: 48px; border: none; border-radius: 12px; background: #534ab7; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .m-send svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Inställningar som bottenpanel (API-nyckelfältet) */
+    .api-banner { display: none; }
+    body.sheet-open .api-banner { display: flex; flex-direction: column; align-items: stretch; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; margin: 0; border-width: 1px 0 0; border-radius: 18px 18px 0 0; padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); gap: 10px; }
+    .api-banner input { min-width: 0; width: 100%; padding: 11px 12px; }
+    .api-banner .m-only { display: block; }
+    .sheet-head.m-only { display: flex; justify-content: space-between; align-items: center; font-size: 17px; font-weight: 600; color: #1a1a1a; }
+    .sheet-close { background: none; border: none; font-size: 22px; line-height: 1; padding: 6px 10px; color: #7a5800; cursor: pointer; }
+    body.sheet-open .sheet-backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 25; }
+
+    /* Rådgivarbeskrivning (långtryck) */
+    .desc-sheet { display: flex; position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,0.35); align-items: flex-end; }
+    .desc-card { background: #fff; width: 100%; border-radius: 18px 18px 0 0; padding: 18px 18px calc(20px + env(safe-area-inset-bottom)); }
+    .desc-name { font-size: 18px; font-weight: 600; }
+    .desc-role { font-size: 13px; color: #888; margin-top: 2px; }
+    .desc-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 10px; margin-top: 8px; }
+    .desc-text { font-size: 15px; line-height: 1.6; color: #333; margin: 12px 0 16px; }
   </style>
 </head>
-<body>
+<body data-step="1">
 <div class="container">
 
+  <div class="m-header">
+    <button class="m-icon" id="mBack" type="button" aria-label="Tillbaka"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 5 8 12 15 19"/></svg></button>
+    <div class="m-title" id="mTitle">Cockpit</div>
+    <span class="m-count" id="mCount"></span>
+    <button class="m-icon" id="mAction" type="button" aria-label="Inställningar">
+      <svg class="i-gear" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="12.5" y2="6"/><line x1="17.5" y1="6" x2="20" y2="6"/><circle cx="15" cy="6" r="2.5"/><line x1="4" y1="12" x2="5.5" y2="12"/><line x1="10.5" y1="12" x2="20" y2="12"/><circle cx="8" cy="12" r="2.5"/><line x1="4" y1="18" x2="11.5" y2="18"/><line x1="16.5" y1="18" x2="20" y2="18"/><circle cx="14" cy="18" r="2.5"/></svg>
+      <svg class="i-trash" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 7 20 7"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>
+    </button>
+  </div>
+
   <div class="api-banner">
+    <div class="sheet-head m-only"><span>Inställningar</span><button type="button" class="sheet-close" id="sheetClose" aria-label="Stäng">✕</button></div>
     <label for="apiKey">🔑 Din API-nyckel:</label>
     <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off" />
     <a href="#" id="clearKey" class="key-clear" hidden>Rensa nyckel</a>
     <div class="hint">Hämta din nyckel på <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> — sparas bara lokalt i webbläsaren.</div>
+    <div class="hint m-only">Installera som app: iPhone: Dela → Lägg till på hemskärmen. Android: menyn → Installera app.</div>
   </div>
 
   <header>
     <h1>Cockpit för Affärsrådgivare</h1>
     <p>Få omedelbar coaching från ditt virtuella expertpanel</p>
   </header>
+
+  <div class="m-scenarios" id="mScenarios"></div>
 
   <div class="scenario-section">
     <div class="scenario-label">Prospektering</div>
@@ -187,8 +303,11 @@
   </div>
 
   <div class="board-label">Välj dina rådgivare</div>
-  <div class="board" id="advisorBoard"></div>
-  <div class="board-row2" id="advisorBoard2"></div>
+  <div id="advisorWrap">
+    <div class="board" id="advisorBoard"></div>
+    <div class="board-row2" id="advisorBoard2"></div>
+  </div>
+  <div class="m-hint">Håll ned en rådgivare för beskrivning</div>
 
   <div class="input-area">
     <textarea id="question" placeholder="Beskriv din situation eller utmaning — ju mer sammanhang, desto bättre coaching får du..."></textarea>
@@ -202,7 +321,29 @@
     </div>
   </div>
 
+  <div class="m-tabs" id="mTabs" hidden></div>
   <div class="responses" id="responses"></div>
+
+  <div class="m-bar">
+    <div class="mb1"><button type="button" class="m-cta" id="mNext" disabled>Välj rådgivare →</button></div>
+    <div class="mb2"><button type="button" class="m-cta" id="mGo" disabled>Få coaching</button></div>
+    <div class="mb3">
+      <input type="text" id="mFollow" placeholder="Följdfråga…" enterkeyhint="send" autocomplete="off" />
+      <button type="button" class="m-send" id="mSend" aria-label="Skicka följdfråga"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+<div class="desc-sheet" id="descSheet" hidden>
+  <div class="desc-card">
+    <div class="desc-name" id="descName"></div>
+    <div class="desc-role" id="descRole"></div>
+    <span class="desc-tag" id="descTag"></span>
+    <p class="desc-text" id="descText"></p>
+    <button type="button" class="m-cta" id="descClose">Stäng</button>
+  </div>
 </div>
 
 <script>
@@ -376,6 +517,7 @@ function updateUI() {
     : `${n} rådgivare ${n > 1 ? 'valda' : 'vald'}`;
   document.getElementById('askBtn').disabled =
     n === 0 || document.getElementById('question').value.trim() === '';
+  updateMobileUI();
 }
 
 document.getElementById('question').addEventListener('input', updateUI);
@@ -387,6 +529,7 @@ function clearAll() {
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   document.getElementById('responses').innerHTML = '';
   conversationHistory = [];
+  resetMobileScenarios();
   updateUI();
 }
 
@@ -402,7 +545,7 @@ async function callAPI(apiKey, systemPrompt, messages) {
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
       max_tokens: 2000,
-      system: systemPrompt,
+      system: systemPrompt + FORMAT_SUFFIX,
       messages
     })
   });
@@ -412,7 +555,76 @@ async function callAPI(apiKey, systemPrompt, messages) {
   throw new Error('Oväntat svar från API.');
 }
 
+// ── Svarsformat: sammanfattning i tre punkter + längre förklaring ────
+const FORMAT_SUFFIX = `
+
+SVARSFORMAT (följ exakt):
+Börja med en rad som bara innehåller "## SAMMANFATTNING". Skriv därefter exakt tre punkter, var och en på en egen rad som börjar med "- ". Varje punkt är en enda kort mening (max 20 ord) som fångar det viktigaste, formulerad i din roll.
+Fortsätt sedan med en rad som bara innehåller "## FÖRKLARING" och därefter din längre, utvecklade förklaring i löpande text.
+Använd inga andra rubriker och ingen markdown-formatering som ** eller #.`;
+
+function parseAnswer(text) {
+  const m = text.match(/##\s*SAMMANFATTNING[^\n]*\n([\s\S]*?)(?:\n\s*##\s*F[ÖO]RKLARING[^\n]*\n?([\s\S]*))?$/i);
+  if (!m) return null;
+  const clean = s => s.replace(/\*\*/g, '').trim();
+  const isBullet = l => /^\s*(?:[-•*]|\d+[.)])\s+/.test(l);
+  const lines = m[1].split('\n');
+  const bullets = lines.filter(isBullet)
+    .map(l => clean(l.replace(/^\s*(?:[-•*]|\d+[.)])\s+/, ''))).filter(Boolean);
+  if (!bullets.length) return null;
+  const rest = clean(lines.filter(l => !isBullet(l)).join('\n'));
+  const details = [rest, clean(m[2] || '')].filter(Boolean).join('\n\n');
+  return { bullets, details };
+}
+
+function renderAnswer(el, text) {
+  const p = parseAnswer(text);
+  if (!p) { el.className = 'response-body'; el.textContent = text; return; }
+  el.className = 'response-body structured';
+  el.textContent = '';
+
+  const box = document.createElement('div');
+  box.className = 'ans-summary';
+  const title = document.createElement('div');
+  title.className = 'ans-summary-title';
+  title.textContent = 'Det viktigaste';
+  const ul = document.createElement('ul');
+  p.bullets.forEach(b => { const li = document.createElement('li'); li.textContent = b; ul.appendChild(li); });
+  box.append(title, ul);
+  el.appendChild(box);
+
+  if (p.details) {
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'ans-toggle';
+    toggle.textContent = 'Visa hela svaret';
+    toggle.addEventListener('click', () => {
+      const open = el.classList.toggle('expanded');
+      toggle.textContent = open ? 'Dölj förklaringen' : 'Visa hela svaret';
+    });
+    el.appendChild(toggle);
+
+    const det = document.createElement('div');
+    det.className = 'ans-detail';
+    const lab = document.createElement('div');
+    lab.className = 'ans-label';
+    lab.textContent = 'Förklaring';
+    const txt = document.createElement('div');
+    txt.className = 'ans-text';
+    txt.textContent = p.details;
+    det.append(lab, txt);
+    el.appendChild(det);
+  }
+}
+
+let busy = false;
 async function askAdvisors() {
+  if (busy) return;
+  busy = true;
+  try { await askAdvisorsRun(); } finally { busy = false; }
+}
+
+async function askAdvisorsRun() {
   const question = document.getElementById('question').value.trim();
   const apiKey = document.getElementById('apiKey').value.trim();
   if (!apiKey) { alert('Ange din API-nyckel i fältet högst upp på sidan.'); return; }
@@ -434,6 +646,10 @@ async function askAdvisors() {
     responsesEl.appendChild(lbl);
   }
 
+  const roundEl = document.createElement('div');
+  roundEl.className = 'round';
+  responsesEl.appendChild(roundEl);
+
   conversationHistory.push({ role: "user", content: question });
 
   const selectedAdvisors = advisors.filter(a => selected.has(a.id));
@@ -454,16 +670,16 @@ async function askAdvisors() {
       </div>
       <div class="response-body loading" id="body-${a.id}">Tänker...</div>
     `;
-    responsesEl.appendChild(card);
+    roundEl.appendChild(card);
   });
+  buildTabs(roundEl);
 
   const advisorResponses = {};
   await Promise.all(selectedRegular.map(async a => {
     const bodyEl = document.getElementById('body-' + a.id);
     try {
       const text = await callAPI(apiKey, a.persona, conversationHistory);
-      bodyEl.className = 'response-body';
-      bodyEl.textContent = text;
+      renderAnswer(bodyEl, text);
       advisorResponses[a.name] = text;
     } catch (e) {
       bodyEl.className = 'response-body error';
@@ -475,8 +691,7 @@ async function askAdvisors() {
     const bodyEl = document.getElementById('body-' + synthesisAdvisor.id);
     try {
       const text = await callAPI(apiKey, synthesisAdvisor.persona, conversationHistory);
-      bodyEl.className = 'response-body';
-      bodyEl.textContent = text;
+      renderAnswer(bodyEl, text);
     } catch (e) {
       bodyEl.className = 'response-body error';
       bodyEl.textContent = `Fel: ${e.message}`;
@@ -491,7 +706,7 @@ async function askAdvisors() {
       <div class="synthesis-divider-label">⚖️ Sammanvävt råd</div>
       <div class="synthesis-divider-line"></div>
     `;
-    responsesEl.appendChild(divider);
+    roundEl.appendChild(divider);
 
     const synthCard = document.createElement('div');
     synthCard.className = 'response-card synthesis-result';
@@ -505,7 +720,8 @@ async function askAdvisors() {
       </div>
       <div class="response-body loading" id="body-auto-synthesis">Väger samman perspektiven...</div>
     `;
-    responsesEl.appendChild(synthCard);
+    roundEl.appendChild(synthCard);
+    buildTabs(roundEl, synthCard);
 
     const advisorSummary = Object.entries(advisorResponses)
       .map(([name, response]) => `### ${name}\n${response}`)
@@ -529,8 +745,7 @@ ${advisorSummary}`;
 
     try {
       const synthText = await callAPI(apiKey, synthesisPrompt, [{ role: "user", content: "Gör din sammanvägda analys." }]);
-      document.getElementById('body-auto-synthesis').className = 'response-body';
-      document.getElementById('body-auto-synthesis').textContent = synthText;
+      renderAnswer(document.getElementById('body-auto-synthesis'), synthText);
     } catch (e) {
       document.getElementById('body-auto-synthesis').className = 'response-body error';
       document.getElementById('body-auto-synthesis').textContent = `Fel: ${e.message}`;
@@ -543,6 +758,7 @@ ${advisorSummary}`;
   btn.textContent = 'Få coaching →';
   document.getElementById('question').value = '';
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  resetMobileScenarios();
   updateUI();
 }
 
@@ -573,9 +789,205 @@ document.getElementById('clearKey').addEventListener('click', e => {
 });
 updateClearLink();
 
+// ── Mobilläge: steg för steg ─────────────────────────────────────────
+// Mobil-CSS:en ligger i <style id="mobileCss"> och gäller under 700 px.
+// ?mobil eller ?dator i adressen tvingar fram ett visst läge.
+const mobileCssEl = document.getElementById('mobileCss');
+(function () {
+  const p = new URLSearchParams(location.search);
+  if (p.has('mobil')) mobileCssEl.media = 'all';
+  else if (p.has('dator')) mobileCssEl.media = 'not all';
+})();
+const isMobile = () => window.matchMedia(mobileCssEl.media).matches;
+
+let step = 1;
+
+function setStep(n, push) {
+  step = n;
+  document.body.dataset.step = n;
+  document.getElementById('mTitle').textContent = { 1: 'Cockpit', 2: 'Rådgivare', 3: 'Svar' }[n];
+  document.getElementById('mAction').setAttribute('aria-label', n === 3 ? 'Rensa och börja om' : 'Inställningar');
+  if (push) history.pushState({ step: n }, '');
+  updateMobileUI();
+}
+
+function goToStepOne() {
+  const delta = step - 1;
+  setStep(1, false);
+  if (delta > 0) { try { history.go(-delta); } catch (e) {} }
+}
+
+function updateMobileUI() {
+  const n = selected.size;
+  const hasQuestion = document.getElementById('question').value.trim() !== '';
+  document.getElementById('mNext').disabled = !hasQuestion;
+  const go = document.getElementById('mGo');
+  go.disabled = n === 0 || !hasQuestion;
+  go.textContent = n > 0 ? `Få coaching (${n})` : 'Välj minst en rådgivare';
+  document.getElementById('mCount').textContent = `${n} ${n === 1 ? 'vald' : 'valda'}`;
+}
+
+function buildMobileScenarios() {
+  const wrap = document.getElementById('mScenarios');
+  Object.entries(scenarios).forEach(([id, chips]) => {
+    const field = document.createElement('div');
+    field.className = 'm-field';
+    const label = document.createElement('label');
+    label.htmlFor = 'ms-' + id;
+    label.textContent = document.getElementById(id).previousElementSibling.textContent;
+    const sel = document.createElement('select');
+    sel.id = 'ms-' + id;
+    sel.add(new Option('Välj scenario…', ''));
+    chips.forEach((c, i) => sel.add(new Option(c.label, String(i))));
+    sel.addEventListener('change', () => {
+      resetMobileScenarios(sel);
+      if (sel.value === '') { sel.classList.remove('has'); return; }
+      sel.classList.add('has');
+      document.getElementById('question').value = chips[Number(sel.value)].text;
+      updateUI();
+    });
+    field.append(label, sel);
+    wrap.appendChild(field);
+  });
+}
+
+function resetMobileScenarios(except) {
+  document.querySelectorAll('#mScenarios select').forEach(s => {
+    if (s !== except) { s.value = ''; s.classList.remove('has'); }
+  });
+}
+
+function applyMobileDefault() {
+  if (isMobile() && selected.size === 0) toggleAdvisor('synthesis_profile');
+}
+
+function tabLabel(card) {
+  if (card.querySelector('#body-auto-synthesis')) return 'Panelens syntes';
+  if (card.classList.contains('synthesis-result')) return 'Syntes';
+  return card.querySelector('.response-name').textContent.replace(/^Dr\.\s*/, '').split(' ')[0];
+}
+
+function buildTabs(round, focusCard) {
+  const tabs = document.getElementById('mTabs');
+  const cards = [...round.querySelectorAll('.response-card')];
+  const isSynth = c => c.classList.contains('synthesis-result');
+  const ordered = [...cards.filter(isSynth), ...cards.filter(c => !isSynth(c))];
+  const active = focusCard || cards.find(c => c.classList.contains('m-active')) || ordered[0];
+  cards.forEach(c => c.classList.toggle('m-active', c === active));
+  tabs.textContent = '';
+  ordered.forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'm-tab' + (c === active ? ' on' : '');
+    b.textContent = tabLabel(c);
+    b.addEventListener('click', () => {
+      cards.forEach(x => x.classList.toggle('m-active', x === c));
+      tabs.querySelectorAll('.m-tab').forEach(t => t.classList.toggle('on', t === b));
+    });
+    tabs.appendChild(b);
+  });
+  tabs.hidden = cards.length < 2;
+}
+
+const openSheet = () => document.body.classList.add('sheet-open');
+const closeSheet = () => document.body.classList.remove('sheet-open');
+
+function showDesc(id) {
+  const a = advisors.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('descName').textContent = a.name;
+  document.getElementById('descRole').textContent = a.role;
+  const tag = document.getElementById('descTag');
+  tag.textContent = a.tag;
+  tag.style.background = a.tagBg;
+  tag.style.color = a.tagColor;
+  document.getElementById('descText').textContent = a.desc;
+  document.getElementById('descSheet').hidden = false;
+}
+
+function mobileAsk() {
+  if (busy) return;
+  if (!document.getElementById('apiKey').value.trim()) {
+    openSheet();
+    setTimeout(() => document.getElementById('apiKey').focus(), 50);
+    return;
+  }
+  if (!document.getElementById('question').value.trim() || selected.size === 0) return;
+  setStep(3, step < 3);
+  askAdvisors();
+}
+
+function initMobile() {
+  buildMobileScenarios();
+  history.replaceState({ step: 1 }, '');
+  setStep(1, false);
+  applyMobileDefault();
+
+  window.addEventListener('popstate', e => {
+    let s = (e.state && e.state.step) || 1;
+    if (s === 2 && document.getElementById('question').value.trim() === '') s = 1;
+    setStep(s, false);
+  });
+
+  document.getElementById('mNext').addEventListener('click', () => {
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    setStep(2, true);
+  });
+  document.getElementById('mGo').addEventListener('click', mobileAsk);
+  document.getElementById('mBack').addEventListener('click', goToStepOne);
+  document.getElementById('mAction').addEventListener('click', () => {
+    if (step === 3) {
+      clearAll();
+      document.getElementById('mTabs').textContent = '';
+      applyMobileDefault();
+      goToStepOne();
+    } else {
+      openSheet();
+    }
+  });
+
+  const follow = document.getElementById('mFollow');
+  const sendFollow = () => {
+    const v = follow.value.trim();
+    if (!v || busy) return;
+    document.getElementById('question').value = v;
+    follow.value = '';
+    updateUI();
+    mobileAsk();
+  };
+  document.getElementById('mSend').addEventListener('click', sendFollow);
+  follow.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendFollow(); } });
+
+  document.getElementById('sheetClose').addEventListener('click', closeSheet);
+  document.getElementById('sheetBackdrop').addEventListener('click', closeSheet);
+
+  const descSheet = document.getElementById('descSheet');
+  const closeDesc = () => { descSheet.hidden = true; };
+  document.getElementById('descClose').addEventListener('click', closeDesc);
+  descSheet.addEventListener('click', e => { if (e.target === descSheet) closeDesc(); });
+
+  // Långtryck på en rådgivare visar beskrivningen; vanligt tryck väljer/avväljer
+  const wrap = document.getElementById('advisorWrap');
+  let lpTimer = null, lpFired = false;
+  const cancelLp = () => clearTimeout(lpTimer);
+  wrap.addEventListener('pointerdown', e => {
+    if (!isMobile()) return;
+    const card = e.target.closest('.advisor-card');
+    if (!card) return;
+    lpFired = false;
+    lpTimer = setTimeout(() => { lpFired = true; showDesc(card.id.replace('card-', '')); }, 500);
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => wrap.addEventListener(t, cancelLp));
+  wrap.addEventListener('click', e => {
+    if (lpFired) { e.stopPropagation(); e.preventDefault(); lpFired = false; }
+  }, true);
+  wrap.addEventListener('contextmenu', e => { if (isMobile()) e.preventDefault(); });
+}
+
 renderScenarios();
 renderBoard();
 updateUI();
+initMobile();
 
 // ── PWA: service worker ──────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
