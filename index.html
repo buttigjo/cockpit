@@ -170,6 +170,22 @@
     .scenario-section { margin: 0 !important; }
     .scenario-section .scenario-label { display: none; }
 
+    /* Villkor och ansvarsfriskrivning */
+    .disclaimer-line { font-size: 12px; line-height: 1.45; color: #777; margin-top: 7px; }
+    .disclaimer-line a, .site-foot a, .terms-link { color: #534ab7; text-decoration: underline; cursor: pointer; }
+    .site-foot { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e0ded6; font-size: 12px; line-height: 1.5; color: #888; }
+    .ans-foot { margin-top: 12px; font-size: 11px; color: #999; }
+    .terms-gate { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .terms-card { background: #fff; border-radius: 16px; width: 100%; max-width: 640px; max-height: 100%; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; }
+    .terms-card h2 { font-size: 20px; font-weight: 700; color: #000; }
+    .terms-body { overflow-y: auto; font-size: 14px; line-height: 1.6; color: #222; padding-right: 4px; }
+    .terms-body h3 { font-size: 14px; font-weight: 700; color: #000; margin: 14px 0 4px; }
+    .terms-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.4; cursor: pointer; }
+    .terms-check input { width: 20px; height: 20px; margin-top: 1px; flex-shrink: 0; accent-color: #534ab7; }
+    .terms-btn { font-family: inherit; font-size: 15px; font-weight: 600; padding: 13px; border: none; border-radius: 10px; background: #534ab7; color: #fff; cursor: pointer; }
+    .terms-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+    body.terms-open { overflow: hidden; }
+
     /* Accept-koll */
     .ans-accept { background: #f1faf6; border: 1px solid #c4e6d8; border-radius: 10px; padding: 11px 15px; margin-top: 14px; }
     .ans-accept-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; color: #0f6e56; margin-bottom: 8px; }
@@ -278,6 +294,12 @@
     .sheet-close { background: none; border: none; font-size: 22px; line-height: 1; padding: 6px 10px; color: #7a5800; cursor: pointer; }
     body.sheet-open .sheet-backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 25; }
 
+    /* Villkor i mobilläge */
+    .site-foot { display: none; }
+    .disclaimer-line { flex-shrink: 0; font-size: 11.5px; }
+    .terms-gate { align-items: flex-end; padding: 0; }
+    .terms-card { max-width: none; border-radius: 18px 18px 0 0; max-height: 92vh; max-height: 92dvh; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); }
+
     /* Rådgivarbeskrivning (långtryck) */
     .desc-sheet { display: flex; position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,0.35); align-items: flex-end; }
     .desc-card { background: #fff; width: 100%; border-radius: 18px 18px 0 0; padding: 18px 18px calc(20px + env(safe-area-inset-bottom)); }
@@ -306,6 +328,7 @@
     <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off" />
     <a href="#" id="clearKey" class="key-clear" hidden>Rensa nyckel</a>
     <div class="hint">Hämta din nyckel på <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> — sparas bara lokalt i webbläsaren.</div>
+    <div class="hint"><a href="#" id="termsLinkBanner">Villkor och ansvarsfriskrivning</a></div>
     <div class="hint m-only">Installera som app: iPhone: Dela → Lägg till på hemskärmen. Android: menyn → Installera app.</div>
   </div>
 
@@ -357,6 +380,7 @@
 
   <div class="input-area">
     <textarea id="question" placeholder="Beskriv din situation eller utmaning — ju mer sammanhang, desto bättre coaching får du..."></textarea>
+    <div class="disclaimer-line">AI-genererade råd utan garanti. Skriv inte in känsliga kund- eller personuppgifter. Du ansvarar själv för hur råden används. <a href="#" class="terms-link">Villkor</a></div>
   </div>
 
   <div class="actions">
@@ -370,6 +394,8 @@
   <div class="m-tabs" id="mTabs" hidden></div>
   <div class="responses" id="responses"></div>
 
+  <div class="site-foot">Utgivare: Xplan Affärsutveckling AB. Cockpit är ett AI-verktyg för övning och inspiration. <a href="#" class="terms-link">Villkor och ansvarsfriskrivning</a></div>
+
   <div class="m-bar">
     <div class="mb1"><button type="button" class="m-cta" id="mNext" disabled>Välj rådgivare →</button></div>
     <div class="mb2"><button type="button" class="m-cta" id="mGo" disabled>Få coaching</button></div>
@@ -381,6 +407,35 @@
 </div>
 
 <div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+<div class="terms-gate" id="termsGate" hidden role="dialog" aria-modal="true" aria-labelledby="termsTitle">
+  <div class="terms-card">
+    <h2 id="termsTitle">Viktigt innan du använder Cockpit</h2>
+    <div class="terms-body">
+      <p>Cockpit för Affärsrådgivare ges ut av Xplan Affärsutveckling AB som ett övnings- och inspirationsverktyg.</p>
+
+      <h3>1. Skriv inte in känsliga uppgifter</h3>
+      <p>Det du skriver skickas till en AI-tjänst (Anthropic, Claude) för att ta fram råden. Skriv därför inte in kundnamn, personuppgifter, personnummer, affärshemligheter, sekretessbelagd information eller annat du inte har rätt att dela externt. Beskriv situationen anonymiserat, till exempel "en inköpschef på ett medelstort industriföretag". Xplan lagrar inte det du skriver. Hur uppgifterna hanteras av AI-leverantören styrs av leverantörens villkor och av avtalet för den API-nyckel du använder.</p>
+
+      <h3>2. Råden är AI-genererade</h3>
+      <p>Svaren skapas av en AI-modell. De kan vara ofullständiga, felaktiga eller olämpliga för din situation. De är allmänna idéer för reflektion och träning, inte professionell, juridisk, ekonomisk eller annan rådgivning, och de tar inte hänsyn till alla omständigheter i ditt enskilda fall. Använd ditt eget omdöme och kontrollera råden innan du agerar.</p>
+
+      <h3>3. Ansvar</h3>
+      <p>Cockpit tillhandahålls i befintligt skick och utan garantier av något slag. Du ansvarar själv för hur du använder råden och för de beslut och handlingar du vidtar. Xplan Affärsutveckling AB ansvarar inte, i den utsträckning lagen tillåter, för skada, förlust, utebliven affär eller andra konsekvenser som uppstår av att verktyget eller råden används, eller av fel, avbrott eller ändringar i verktyget. Inget i dessa villkor begränsar ansvar som enligt tvingande lag inte kan begränsas.</p>
+
+      <h3>4. Rådgivarna är roller</h3>
+      <p>Rådgivarna är AI-roller som speglar kända säljmetoder och perspektiv. De är inte uttalanden från, och inte godkända av, de personer eller organisationer vars metoder de hänvisar till.</p>
+
+      <h3>5. Din API-nyckel</h3>
+      <p>Du använder din egen API-nyckel. Du ansvarar för dess säkerhet och för de kostnader som uppstår. Nyckeln, och uppgiften att du godkänt villkoren, sparas bara i din webbläsare på den här enheten.</p>
+
+      <h3>6. Ändringar</h3>
+      <p>Villkoren kan ändras. Du får då läsa och godkänna dem igen.</p>
+    </div>
+    <label class="terms-check" id="termsCheckRow"><input type="checkbox" id="termsCheck"> <span>Jag har läst och förstått villkoren och godkänner dem.</span></label>
+    <button type="button" class="terms-btn" id="termsOk" disabled>Fortsätt</button>
+  </div>
+</div>
 
 <div class="desc-sheet" id="descSheet" hidden>
   <div class="desc-card">
@@ -831,6 +886,7 @@ function renderAnswer(el, text, partial) {
 let busy = false;
 async function askAdvisors() {
   if (busy) return;
+  if (!termsAccepted()) { openTerms(true); return; }
   busy = true;
   try { await askAdvisorsRun(); } finally { busy = false; }
 }
@@ -880,6 +936,7 @@ async function askAdvisorsRun() {
         </div>
       </div>
       <div class="response-body loading" id="body-${a.id}">Tänker...</div>
+      <div class="ans-foot">AI-genererat råd utan garanti. Kontrollera innan du agerar.</div>
     `;
     roundEl.appendChild(card);
   });
@@ -933,6 +990,7 @@ async function askAdvisorsRun() {
         </div>
       </div>
       <div class="response-body loading" id="body-auto-synthesis">Väger samman perspektiven...</div>
+      <div class="ans-foot">AI-genererat råd utan garanti. Kontrollera innan du agerar.</div>
     `;
     roundEl.appendChild(synthCard);
     buildTabs(roundEl, synthCard);
@@ -1117,6 +1175,7 @@ function showDesc(id) {
 
 function mobileAsk() {
   if (busy) return;
+  if (!termsAccepted()) { openTerms(true); return; }
   if (!document.getElementById('apiKey').value.trim()) {
     openSheet();
     setTimeout(() => document.getElementById('apiKey').focus(), 50);
@@ -1194,11 +1253,66 @@ function initMobile() {
   wrap.addEventListener('contextmenu', e => { if (isMobile()) e.preventDefault(); });
 }
 
+// ── Villkor och ansvarsfriskrivning ──────────────────────────────────
+// Byt TERMS_VERSION när texten i villkoren ändras, då måste alla godkänna igen.
+const TERMS_VERSION = 'v1-2026-10';
+const TERMS_STORAGE = 'cockpit.terms';
+let termsSession = false;
+
+function termsAccepted() {
+  if (termsSession) return true;
+  try { return localStorage.getItem(TERMS_STORAGE) === TERMS_VERSION; } catch (e) { return false; }
+}
+
+function openTerms(mustAccept) {
+  const gate = document.getElementById('termsGate');
+  const check = document.getElementById('termsCheck');
+  const ok = document.getElementById('termsOk');
+  gate.dataset.must = mustAccept ? '1' : '';
+  document.getElementById('termsCheckRow').hidden = !mustAccept;
+  check.checked = false;
+  ok.textContent = mustAccept ? 'Fortsätt' : 'Stäng';
+  ok.disabled = mustAccept;
+  gate.hidden = false;
+  document.body.classList.add('terms-open');
+  gate.querySelector('.terms-body').scrollTop = 0;
+  (mustAccept ? check : ok).focus();
+}
+
+function closeTerms() {
+  document.getElementById('termsGate').hidden = true;
+  document.body.classList.remove('terms-open');
+}
+
+function initTerms() {
+  const gate = document.getElementById('termsGate');
+  const check = document.getElementById('termsCheck');
+  const ok = document.getElementById('termsOk');
+  check.addEventListener('change', () => { ok.disabled = !check.checked; });
+  ok.addEventListener('click', () => {
+    if (gate.dataset.must) {
+      termsSession = true;
+      try { localStorage.setItem(TERMS_STORAGE, TERMS_VERSION); } catch (e) {}
+    }
+    closeTerms();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !gate.hidden && !gate.dataset.must) closeTerms();
+  });
+  document.querySelectorAll('.terms-link, #termsLinkBanner').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    closeSheet();
+    openTerms(!termsAccepted());
+  }));
+  if (!termsAccepted()) openTerms(true);
+}
+
 renderScenarios();
 buildCatTabs();
 renderBoard();
 updateUI();
 initMobile();
+initTerms();
 
 // ── PWA: service worker ──────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
