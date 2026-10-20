@@ -157,6 +157,19 @@
     .ans-label { color: #888; margin-bottom: 5px; }
     .ans-text { white-space: pre-wrap; }
 
+    /* Scenariokategorier som flikar (laptop) */
+    .cat-tabs { display: flex; flex-wrap: wrap; gap: 0 2px; border-bottom: 1px solid #d6d4cc; margin: 0 0 14px; }
+    .cat-tab {
+      font-family: inherit; font-size: 13px; font-weight: 700; color: #444;
+      background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -1px;
+      padding: 9px 9px; cursor: pointer; white-space: nowrap; transition: color 0.15s, border-color 0.15s;
+    }
+    .cat-tab:hover { color: #000; border-bottom-color: #bbb; }
+    .cat-tab.on { color: #000; border-bottom-color: #000; }
+    .cat-tab.has::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #7f77dd; margin-left: 6px; vertical-align: middle; }
+    .scenario-section { margin: 0 !important; }
+    .scenario-section .scenario-label { display: none; }
+
     /* Accept-koll */
     .ans-accept { background: #f1faf6; border: 1px solid #c4e6d8; border-radius: 10px; padding: 11px 15px; margin-top: 14px; }
     .ans-accept-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; color: #0f6e56; margin-bottom: 8px; }
@@ -185,7 +198,7 @@
     body { padding: 0; height: 100vh; height: 100dvh; overflow: hidden; }
     .container { display: flex; flex-direction: column; height: 100vh; height: 100dvh; max-width: none; margin: 0; }
 
-    header, .scenario-section, .board-label, .actions { display: none; }
+    header, .scenario-section, .cat-tabs, .board-label, .actions { display: none; }
 
     /* Toppfält */
     .m-header { display: flex; align-items: center; gap: 2px; padding: calc(4px + env(safe-area-inset-top)) 6px 2px 14px; min-height: 52px; flex-shrink: 0; }
@@ -302,6 +315,8 @@
   </header>
 
   <div class="m-scenarios" id="mScenarios"></div>
+
+  <div class="cat-tabs" id="catTabs" role="tablist" aria-label="Scenariokategorier"></div>
 
   <div class="scenario-section">
     <div class="scenario-label">Prospektering</div>
@@ -582,6 +597,41 @@ function updateUI() {
   document.getElementById('askBtn').disabled =
     n === 0 || document.getElementById('question').value.trim() === '';
   updateMobileUI();
+  updateCatTabs();
+}
+
+// ── Scenariokategorier som flikar (laptop) ───────────────────────────
+function buildCatTabs() {
+  const bar = document.getElementById('catTabs');
+  const ids = Object.keys(scenarios);
+  ids.forEach(id => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cat-tab';
+    b.dataset.cat = id;
+    b.setAttribute('role', 'tab');
+    b.textContent = document.getElementById(id).previousElementSibling.textContent;
+    b.addEventListener('click', () => showCat(id));
+    bar.appendChild(b);
+  });
+  showCat(ids[0]);
+}
+
+function showCat(id) {
+  Object.keys(scenarios).forEach(cid => {
+    document.getElementById(cid).parentElement.hidden = cid !== id;
+  });
+  document.querySelectorAll('.cat-tab').forEach(t => {
+    const on = t.dataset.cat === id;
+    t.classList.toggle('on', on);
+    t.setAttribute('aria-selected', String(on));
+  });
+}
+
+function updateCatTabs() {
+  document.querySelectorAll('.cat-tab').forEach(t => {
+    t.classList.toggle('has', !!document.getElementById(t.dataset.cat).querySelector('.chip.active'));
+  });
 }
 
 document.getElementById('question').addEventListener('input', updateUI);
@@ -1086,6 +1136,7 @@ function initMobile() {
 }
 
 renderScenarios();
+buildCatTabs();
 renderBoard();
 updateUI();
 initMobile();
