@@ -647,7 +647,8 @@ function clearAll() {
   updateUI();
 }
 
-async function callAPI(apiKey, systemPrompt, messages, withAccept) {
+// Anropar modellen med streaming. onText(textHittills) anropas medan svaret skrivs.
+async function callAPI(apiKey, systemPrompt, messages, withAccept, onText) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -659,14 +660,65 @@ async function callAPI(apiKey, systemPrompt, messages, withAccept) {
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
       max_tokens: 2000,
+      stream: true,
       system: systemPrompt + FORMAT_SUFFIX + (withAccept ? ACCEPT_SUFFIX : ''),
       messages
     })
   });
-  const data = await res.json();
-  if (data?.content?.[0]?.text) return data.content[0].text;
-  if (data?.error) throw new Error(`${data.error.type}: ${data.error.message}`);
-  throw new Error('Oväntat svar från API.');
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    if (data?.error) throw new Error(`${data.error.type}: ${data.error.message}`);
+    throw new Error(`API-fel ${res.status}`);
+  }
+
+  let text = '', buf = '';
+  const handle = block => {
+    const line = block.split('\n').find(l => l.startsWith('data:'));
+    if (!line) return;
+    let ev;
+    try { ev = JSON.parse(line.slice(5).trim()); } catch (e) { return; }
+    if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') {
+      text += ev.delta.text;
+      if (onText) onText(text);
+    } else if (ev.type === 'error') {
+      throw new Error(`${ev.error.type}: ${ev.error.message}`);
+    }
+  };
+  const feed = chunk => {
+    buf += chunk.replace(/\r\n/g, '\n');
+    const blocks = buf.split('\n\n');
+    buf = blocks.pop();
+    blocks.forEach(handle);
+  };
+
+  if (res.body && res.body.getReader) {
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      feed(dec.decode(value, { stream: true }));
+    }
+    feed(dec.decode());
+  } else {
+    feed(await res.text());
+  }
+  if (buf.trim()) handle(buf);
+
+  if (!text) throw new Error('Oväntat svar från API.');
+  return text;
+}
+
+// Uppdaterar ett svarskort medan texten strömmar in (högst var 50:e ms)
+function streamInto(el) {
+  let latest = '', timer = null, stopped = false;
+  const fn = text => {
+    latest = text;
+    if (timer || stopped) return;
+    timer = setTimeout(() => { timer = null; if (!stopped) renderAnswer(el, latest, true); }, 50);
+  };
+  fn.stop = () => { stopped = true; clearTimeout(timer); timer = null; };
+  return fn;
 }
 
 // ── Svarsformat: sammanfattning i tre punkter + längre förklaring ────
@@ -697,7 +749,7 @@ function parseAccept(block) {
   return rows.length ? rows : null;
 }
 
-function parseAnswer(text) {
+function parseAnswer(text, partial) {
   let accept = null;
   const am = text.match(/\n\s*##\s*ACCEPT[\s-]*KOLL[^\n]*\n?([\s\S]*)$/i);
   if (am) { accept = parseAccept(am[1]); text = text.slice(0, am.index); }
@@ -709,15 +761,23 @@ function parseAnswer(text) {
   const bullets = lines.filter(isBullet)
     .map(l => clean(l.replace(/^\s*(?:[-•*]|\d+[.)])\s+/, ''))).filter(Boolean);
   if (!bullets.length) return null;
-  const rest = clean(lines.filter(l => !isBullet(l)).join('\n'));
-  const details = [rest, clean(m[2] || '')].filter(Boolean).join('\n\n');
+  const rest = clean(lines.filter(l => !isBullet(l) && !/^\s*##/.test(l)).join('\n'));
+  let details = [rest, clean(m[2] || '')].filter(Boolean).join('\n\n');
+  // Medan svaret strömmar in kan en rubrik vara halvskriven sist i texten
+  if (partial) details = details.replace(/\n?\s*#{1,2}[^\n]*$/, '').trim();
   return { bullets, details, accept };
 }
 
-function renderAnswer(el, text) {
-  const p = parseAnswer(text);
-  if (!p) { el.className = 'response-body'; el.textContent = text; return; }
-  el.className = 'response-body structured';
+function renderAnswer(el, text, partial) {
+  const p = parseAnswer(text, partial);
+  if (!p) {
+    if (partial && text.length < 300) return;  // vänta tills formatet syns
+    el.className = 'response-body';
+    el.textContent = text;
+    return;
+  }
+  const wasOpen = el.classList.contains('expanded');
+  el.className = 'response-body structured' + (wasOpen ? ' expanded' : '');
   el.textContent = '';
 
   const box = document.createElement('div');
@@ -734,7 +794,7 @@ function renderAnswer(el, text) {
     const toggle = document.createElement('button');
     toggle.type = 'button';
     toggle.className = 'ans-toggle';
-    toggle.textContent = 'Visa hela svaret';
+    toggle.textContent = wasOpen ? 'Dölj förklaringen' : 'Visa hela svaret';
     toggle.addEventListener('click', () => {
       const open = el.classList.toggle('expanded');
       toggle.textContent = open ? 'Dölj förklaringen' : 'Visa hela svaret';
@@ -825,29 +885,32 @@ async function askAdvisorsRun() {
   });
   buildTabs(roundEl);
 
-  const advisorResponses = {};
-  await Promise.all(selectedRegular.map(async a => {
-    const bodyEl = document.getElementById('body-' + a.id);
+  // Visar ett strömmande svar i ett kort. Returnerar texten, eller null vid fel.
+  const runCard = async (bodyEl, systemPrompt, history, withAccept) => {
+    const st = streamInto(bodyEl);
     try {
-      const text = await callAPI(apiKey, a.persona, conversationHistory, a.acceptCheck);
+      const text = await callAPI(apiKey, systemPrompt, history, withAccept, st);
+      st.stop();
       renderAnswer(bodyEl, text);
-      advisorResponses[a.name] = text;
+      return text;
     } catch (e) {
+      st.stop();
       bodyEl.className = 'response-body error';
       bodyEl.textContent = `Fel: ${e.message}`;
+      return null;
     }
-  }));
+  };
 
-  if (hasSynthesisProfile) {
-    const bodyEl = document.getElementById('body-' + synthesisAdvisor.id);
-    try {
-      const text = await callAPI(apiKey, synthesisAdvisor.persona, conversationHistory, true);
-      renderAnswer(bodyEl, text);
-    } catch (e) {
-      bodyEl.className = 'response-body error';
-      bodyEl.textContent = `Fel: ${e.message}`;
-    }
-  }
+  const advisorResponses = {};
+  // Sammanvävt råd behöver inte rådgivarnas svar, så det startar samtidigt med dem
+  const synthProfileP = hasSynthesisProfile
+    ? runCard(document.getElementById('body-' + synthesisAdvisor.id), synthesisAdvisor.persona, conversationHistory, true)
+    : null;
+
+  await Promise.all(selectedRegular.map(async a => {
+    const text = await runCard(document.getElementById('body-' + a.id), a.persona, conversationHistory, a.acceptCheck);
+    if (text) advisorResponses[a.name] = text;
+  }));
 
   if (hasMultipleRegular && Object.keys(advisorResponses).length >= 2) {
     const divider = document.createElement('div');
@@ -894,14 +957,10 @@ Frågan som ställdes: ${question}
 Rådgivarnas svar:
 ${advisorSummary}`;
 
-    try {
-      const synthText = await callAPI(apiKey, synthesisPrompt, [{ role: "user", content: "Gör din sammanvägda analys." }], true);
-      renderAnswer(document.getElementById('body-auto-synthesis'), synthText);
-    } catch (e) {
-      document.getElementById('body-auto-synthesis').className = 'response-body error';
-      document.getElementById('body-auto-synthesis').textContent = `Fel: ${e.message}`;
-    }
+    await runCard(document.getElementById('body-auto-synthesis'), synthesisPrompt, [{ role: "user", content: "Gör din sammanvägda analys." }], true);
   }
+
+  if (synthProfileP) await synthProfileP;
 
   conversationHistory.push({ role: "assistant", content: `[Panelen svarade på: ${question}]` });
 
