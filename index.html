@@ -516,7 +516,7 @@ const advisors = [
   {
     id: "xplan", name: "Xplan", role: "Affärsrådgivarens vän", emoji: "✅", featured: true, acceptCheck: true,
     tag: "Xplans metod", tagBg: "#9FE1CB", tagColor: "#085041", avatarBg: "#E1F5EE",
-    desc: "Utgår från Xplans säljmetodik. Hjälper dig styra mot de tre accepterna (behov, oss som samarbetspartner och lösning) från rätt personer i maktbasen, innan du går till offert. Varje svar avslutas med en accept-koll.",
+    desc: "Utgår från Xplans säljmetodik. Hjälper dig styra mot de tre accepterna (behov, oss som samarbetspartner och lösning) från rätt personer i maktbasen, innan du går till offert. I Kundmöte, Köpresan & Maktbasen, Behovsanalys och Förhandling avslutas svaret med en accept-koll.",
     persona: `Du är Xplan, en rådgivare som utgår från Xplans säljmetodik för komplex B2B-försäljning. Du coachar säljaren att styra mot tre accepter innan offert:
 1. Accept på behovet. Det är kunden som ger accepten, inte vi som ser behovet.
 2. Accept på oss som samarbetspartner, det vill säga på vårt företag och dess egenskaper.
@@ -584,7 +584,7 @@ Hur du svarar: rak, konkret och pedagogisk. Hänvisa till rätt steg i metodiken
     id: "synthesis_profile", name: "Sammanvävt råd", role: "Panelens samlade visdom", emoji: "⚖️",
     tag: "Balanserad helhetsbild", tagBg: "#E8E4FF", tagColor: "#3c3489", avatarBg: "#EEEDFE",
     desc: "Välj denna för ett direkt balanserat råd utan att välja enskilda rådgivare. Väger samman alla perspektiv — var panelen är överens, var den skiljer sig åt — och ger max 3 konkreta nästa steg.",
-    isSynthesisProfile: true, acceptCheck: true,
+    isSynthesisProfile: true,
     persona: `Du är en neutral, erfaren säljstrateg med djup kunskap om hela säljprocessen — från prospektering och relationsbyggande till förhandling och avslut. Du har studerat och integrerat insikterna från Tom Hopkins (avslutstekniker), Neil Rackham (SPIN-frågemetodik), Challenger Sale (utmana status quo), Buying Enablement (stödja kundens interna process), strategisk B2B-försäljning, kundpsykologi och Big Five-personlighetsmodellen. Din uppgift är att ge ett balanserat, väl avvägt råd som väger samman dessa perspektiv. Du lyfter fram var olika skolor är överens, påpekar när rådet beror på kontexten, och avslutar alltid med max 3 tydliga, handlingsinriktade nästa steg. Du svarar alltid på svenska.`
   }
 ];
@@ -784,6 +784,19 @@ Börja med en rad som bara innehåller "## SAMMANFATTNING". Skriv därefter exak
 Fortsätt sedan med en rad som bara innehåller "## FÖRKLARING" och därefter din längre, utvecklade förklaring i löpande text.
 Använd inga andra rubriker än de som anges här och ingen markdown-formatering som ** eller #.`;
 
+// Accept-kollen visas bara för Xplan-rådgivaren, och bara när det valda scenariot
+// ligger i någon av dessa kategorier (id:n på scenariokategorierna).
+const ACCEPT_CATS = ['chips-mote', 'chips-kopresa', 'chips-behov', 'chips-forhandling'];
+let lastScenarioCat = null;
+
+// Kategorin för det scenario som är valt just nu (chip på laptop, dropdown på mobil)
+function activeScenarioCategory() {
+  const chip = document.querySelector('.scenario-row .chip.active');
+  if (chip) return chip.parentElement.id;
+  const sel = document.querySelector('#mScenarios select.has');
+  return sel ? sel.id.replace(/^ms-/, '') : null;
+}
+
 const ACCEPT_SUFFIX = `
 
 ACCEPT-KOLL (ska alltid med):
@@ -900,6 +913,11 @@ async function askAdvisorsRun() {
   // Spara nyckeln första gången användaren kör coaching
   if (loadSavedKey() !== apiKey) { saveKey(apiKey); updateClearLink(); }
 
+  // Följdfrågor behåller kategorin från frågan innan
+  const scenarioCat = activeScenarioCategory() || (conversationHistory.length > 0 ? lastScenarioCat : null);
+  lastScenarioCat = scenarioCat;
+  const acceptOn = ACCEPT_CATS.includes(scenarioCat);
+
   const btn = document.getElementById('askBtn');
   btn.disabled = true;
   btn.textContent = 'Frågar...';
@@ -961,11 +979,11 @@ async function askAdvisorsRun() {
   const advisorResponses = {};
   // Sammanvävt råd behöver inte rådgivarnas svar, så det startar samtidigt med dem
   const synthProfileP = hasSynthesisProfile
-    ? runCard(document.getElementById('body-' + synthesisAdvisor.id), synthesisAdvisor.persona, conversationHistory, true)
+    ? runCard(document.getElementById('body-' + synthesisAdvisor.id), synthesisAdvisor.persona, conversationHistory, false)
     : null;
 
   await Promise.all(selectedRegular.map(async a => {
-    const text = await runCard(document.getElementById('body-' + a.id), a.persona, conversationHistory, a.acceptCheck);
+    const text = await runCard(document.getElementById('body-' + a.id), a.persona, conversationHistory, a.acceptCheck && acceptOn);
     if (text) advisorResponses[a.name] = text;
   }));
 
@@ -996,7 +1014,7 @@ async function askAdvisorsRun() {
     buildTabs(roundEl, synthCard);
 
     const advisorSummary = Object.entries(advisorResponses)
-      .map(([name, response]) => `### ${name}\n${response}`)
+      .map(([name, response]) => `### ${name}\n${response.replace(/\n\s*##\s*ACCEPT[\s-]*KOLL[\s\S]*$/i, '').trim()}`)
       .join('\n\n');
 
     const synthesisPrompt = `Du är en neutral och erfaren säljstrateg. Nedan finns råd om samma säljsituation från ${selectedRegular.length} olika rådgivare med olika perspektiv och metodik. Din uppgift är att:
@@ -1015,7 +1033,7 @@ Frågan som ställdes: ${question}
 Rådgivarnas svar:
 ${advisorSummary}`;
 
-    await runCard(document.getElementById('body-auto-synthesis'), synthesisPrompt, [{ role: "user", content: "Gör din sammanvägda analys." }], true);
+    await runCard(document.getElementById('body-auto-synthesis'), synthesisPrompt, [{ role: "user", content: "Gör din sammanvägda analys." }], false);
   }
 
   if (synthProfileP) await synthProfileP;
