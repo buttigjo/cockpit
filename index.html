@@ -308,7 +308,7 @@
     <div class="scenario-row" id="chips-prospektering"></div>
   </div>
   <div class="scenario-section" style="margin-top:10px;">
-    <div class="scenario-label">Mötesöppning</div>
+    <div class="scenario-label">Kundmöte</div>
     <div class="scenario-row" id="chips-mote"></div>
   </div>
   <div class="scenario-section" style="margin-top:10px;">
@@ -384,9 +384,11 @@ const scenarios = {
     { label: "LinkedIn-kontakt", text: "Jag vill ta kontakt med en potentiell kund via LinkedIn utan att verka säljig eller desperat. Hur formulerar jag mitt första meddelande?" },
     { label: "Cold call", text: "Jag ska ringa kallt till en beslutsfattare på ett stort företag. Hur öppnar jag samtalet och tar mig förbi grindvakten?" },
     { label: "Varm introduktion", text: "En befintlig kund har nämnt ett annat företag som kan vara intresserade. Hur ber jag om en varm introduktion på bästa sätt?" },
-    { label: "Socialt säljande", text: "Jag vill använda sociala medier mer systematiskt för att hitta och värma upp prospekt. Vad är ett bra angreppssätt?" }
+    { label: "Social selling", text: "Jag vill använda sociala medier mer systematiskt för att hitta och värma upp prospekt. Vad är ett bra angreppssätt?" }
   ],
   "chips-mote": [
+    { label: "Linjen i kundmötet", text: "Jag ska ha ett kundmöte och vill följa en tydlig linje: inledning, behovsanalys, vi som samarbetspartner, lösningen på behovet och avslut med nästa steg och en konkret överenskommelse. Hur bygger jag mötet så att jag styr mot accepterna och tar delaccepter under vägen, i stället för att bara informera?" },
+    { label: "Inledning med STAM", text: "Hur öppnar jag kundmötet med STAM: syfte (varför vi har mötet), tid (jag stämmer av att den överenskomna tiden gäller), agenda (jag säljer in linjen i mötet) och mål (var jag vill vara när mötet är slut)? Ge mig formuleringar jag kan använda." },
     { label: "Öppna med insikt", text: "Jag vill öppna mitt nästa kundmöte med en skarp insikt om deras bransch snarare än att prata om mitt erbjudande. Hur gör jag det på ett trovärdigt sätt?" },
     { label: "Öppna med frågor", text: "Hur öppnar jag ett möte med kraftfulla frågor som direkt engagerar kunden och visar att jag förstår deras situation?" },
     { label: "Öppna med agenda", text: "Hur sätter jag en agenda för mötet som känns strukturerad men inte stel, och som ger mig kontroll över processen?" },
@@ -442,7 +444,7 @@ const scenarios = {
 
 const advisors = [
   {
-    id: "xplan", name: "Xplan", role: "De tre accepterna", emoji: "✅", featured: true, acceptCheck: true,
+    id: "xplan", name: "Xplan", role: "Affärsrådgivarens vän", emoji: "✅", featured: true, acceptCheck: true,
     tag: "Xplans metod", tagBg: "#9FE1CB", tagColor: "#085041", avatarBg: "#E1F5EE",
     desc: "Utgår från Xplans säljmetodik. Hjälper dig styra mot de tre accepterna (behov, oss som samarbetspartner och lösning) från rätt personer i maktbasen, innan du går till offert. Varje svar avslutas med en accept-koll.",
     persona: `Du är Xplan, en rådgivare som utgår från Xplans säljmetodik för komplex B2B-försäljning. Du coachar säljaren att styra mot tre accepter innan offert:

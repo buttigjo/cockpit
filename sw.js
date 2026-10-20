@@ -2,7 +2,7 @@
 // Strategi: cache first, network fallback för statiska filer.
 // API-anrop (api.anthropic.com) rörs aldrig och går alltid direkt mot nätet.
 
-const CACHE_NAME = 'cockpit-v4';
+const CACHE_NAME = 'cockpit-v5';
 const ASSETS = [
   './',
   './index.html',
