@@ -143,6 +143,7 @@
     @media (max-width: 620px) {
       .board { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .board-row2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      #advisorFeatured { grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
 
     /* Svar: sammanfattning + förklaring */
@@ -155,6 +156,24 @@
     .ans-summary li { font-size: 14px; line-height: 1.55; color: #26215c; margin-top: 3px; }
     .ans-label { color: #888; margin-bottom: 5px; }
     .ans-text { white-space: pre-wrap; }
+
+    /* Accept-koll */
+    .ans-accept { background: #f1faf6; border: 1px solid #c4e6d8; border-radius: 10px; padding: 11px 15px; margin-top: 14px; }
+    .ans-accept-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; color: #0f6e56; margin-bottom: 8px; }
+    .ans-accept-row + .ans-accept-row { margin-top: 9px; padding-top: 9px; border-top: 1px solid #d8eee4; }
+    .ans-accept-label { font-size: 13px; font-weight: 600; color: #085041; }
+    .ans-accept-q { font-size: 14px; line-height: 1.5; color: #1a1a1a; margin-top: 1px; }
+    .ans-accept-sign { font-size: 13px; line-height: 1.5; color: #5f6b66; margin-top: 2px; }
+
+    /* Xplan-kortet (utvalt) */
+    #advisorFeatured { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+    #advisorFeatured .advisor-card { grid-column: span 2; }
+    .advisor-card.featured { border-color: #b9e0d1; }
+    .advisor-card.featured:hover { border-color: #5dbb98; }
+    .advisor-card.featured.selected { border-color: #1d9e75; background: #e8f7f1; }
+    .advisor-card.featured.selected .advisor-name { color: #085041; }
+    .advisor-card.featured.selected .advisor-desc { color: #0f6e56; border-top-color: #9fe1cb; }
+    .advisor-card.featured .check { background: #1d9e75; }
 
     /* Mobilens delar: dolda på dator */
     [hidden] { display: none !important; }
@@ -203,6 +222,13 @@
     .advisor-name { font-size: 12px; }
     .advisor-role, .advisor-tag, .advisor-desc { display: none; }
     .check { top: 5px; right: 5px; }
+    #advisorFeatured { display: contents; }
+    #advisorFeatured .advisor-card { grid-column: 1 / -1; flex-direction: row; align-items: center; text-align: left; padding: 10px 14px; }
+    #advisorFeatured .card-top { flex-direction: row; align-items: center; gap: 12px; }
+    #advisorFeatured .card-title { text-align: left; }
+    #advisorFeatured .advisor-name { font-size: 14px; }
+    #advisorFeatured .advisor-role { display: block; font-size: 12px; }
+    .ans-accept-q { font-size: 15px; }
 
     /* Steg 3: svar i flikar */
     body[data-step="3"] .m-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 2px 12px 8px; flex-shrink: 0; }
@@ -290,6 +316,10 @@
     <div class="scenario-row" id="chips-kopresa"></div>
   </div>
   <div class="scenario-section" style="margin-top:10px;">
+    <div class="scenario-label">Behovsanalys</div>
+    <div class="scenario-row" id="chips-behov"></div>
+  </div>
+  <div class="scenario-section" style="margin-top:10px;">
     <div class="scenario-label">Relationsresan</div>
     <div class="scenario-row" id="chips-relation"></div>
   </div>
@@ -304,6 +334,7 @@
 
   <div class="board-label">Välj dina rådgivare</div>
   <div id="advisorWrap">
+    <div id="advisorFeatured"></div>
     <div class="board" id="advisorBoard"></div>
     <div class="board-row2" id="advisorBoard2"></div>
   </div>
@@ -314,7 +345,7 @@
   </div>
 
   <div class="actions">
-    <span class="sel-hint" id="selHint">Välj 1–9 rådgivare ovan</span>
+    <span class="sel-hint" id="selHint">Välj 1–10 rådgivare ovan</span>
     <div class="btn-row">
       <button class="btn-clear" onclick="clearAll()">Rensa</button>
       <button class="btn-ask" id="askBtn" onclick="askAdvisors()" disabled>Få coaching →</button>
@@ -372,6 +403,16 @@ const scenarios = {
     { label: "Kunden är redan informerad", text: "Kunden har gjort 80% av sin research innan vi träffas första gången. De vet redan vad de vill ha. Hur möter jag dem där de är och tillför värde?" },
     { label: "Motstridiga intressenter", text: "Jag har flera kontakter hos kunden med olika prioriteringar och delvis motstridiga intressen. Hur navigerar jag mellan dem utan att förlora någon?" }
   ],
+  "chips-behov": [
+    { label: "Förbereda behovsanalysen", text: "Jag ska ha ett första kundmöte. Vilka frågeområden bör jag täcka (verksamhet, marknad och kunder, maktbas och organisation, viktigaste mål och utmaningar, vad som krävs för att nå målen, konkurrenter, krav på en samarbetspartner, hur kraven kan förändras och beslutsprocessen) och vilka öppna frågor ställer jag inom varje område?" },
+    { label: "Situationsfrågor", text: "Ge mig öppna, neutrala situationsfrågor som får kunden att berätta brett om sin verksamhet och sitt nuläge, utan att jag styr svaret." },
+    { label: "Styrfrågor", text: "Kunden har nämnt ett intressant område. Ge mig styrfrågor med när, var, hur, vem, vilka, vad och varför som fördjupar samtalet utan att vara ledande." },
+    { label: "Konsekvensfrågor", text: "Hur ställer jag konsekvensfrågor som får kunden att själv inse vad problemet kostar eller vad en förändring skulle ge, så att behovet blir tydligt och prioriterat?" },
+    { label: "Lösningsfrågor", text: "Ge mig lösningsfrågor som visar vad kunden tycker är viktigt med en eventuell lösning och som skapar engagemang kring den." },
+    { label: "Få accept på behovet", text: "Jag tror att jag har förstått kundens behov. Hur sammanfattar jag det och ställer acceptfrågan så att det är kunden som ger accepten och inte jag som ser behovet?" },
+    { label: "Dolda behov (isberget)", text: "Kunden pratar bara om uttalade krav och önskemål. Vilka frågor hjälper kunden att se de omedvetna och indirekta behoven under ytan?" },
+    { label: "Krav på samarbetspartner", text: "Vilka frågor ställer jag för att förstå kundens krav på en samarbetspartner, hur kraven kan förändras och hur beslutsprocessen går till?" }
+  ],
   "chips-relation": [
     { label: "Från kontakt till sponsor", text: "Jag har en kontakt hos kunden som verkar positiv till oss men som inte aktivt förespråkar oss internt. Hur lyfter jag den personen till att bli en verklig sponsor och champion för oss?" },
     { label: "Kall eller distanserad kontakt", text: "En av mina viktigaste kontakter hos kunden har blivit mer distanserad och svarar inte lika snabbt längre. Något har förändrats. Hur hanterar jag det?" },
@@ -400,6 +441,25 @@ const scenarios = {
 };
 
 const advisors = [
+  {
+    id: "xplan", name: "Xplan", role: "De tre accepterna", emoji: "✅", featured: true, acceptCheck: true,
+    tag: "Xplans metod", tagBg: "#9FE1CB", tagColor: "#085041", avatarBg: "#E1F5EE",
+    desc: "Utgår från Xplans säljmetodik. Hjälper dig styra mot de tre accepterna (behov, oss som samarbetspartner och lösning) från rätt personer i maktbasen, innan du går till offert. Varje svar avslutas med en accept-koll.",
+    persona: `Du är Xplan, en rådgivare som utgår från Xplans säljmetodik för komplex B2B-försäljning. Du coachar säljaren att styra mot tre accepter innan offert:
+1. Accept på behovet. Det är kunden som ger accepten, inte vi som ser behovet.
+2. Accept på oss som samarbetspartner, det vill säga på vårt företag och dess egenskaper.
+3. Accept på lösningen, att det vi skissat på verkar rätt för kunden.
+Accepterna ska komma från en eller flera personer i kundens maktbas. Utan rätt personer räknas de inte. De ska finnas i varje säljprocess innan vi går till offert. Det kan gå snabbt eller ta år. Att offerera utan dem är en vanlig orsak till affärer som stannar.
+
+Din metodik:
+- Säljprocessen: söka, identifiera, accept, förslag, avslut. Accepterna kommer när dialogen med rätt beslutsfattare är etablerad.
+- Linjen i kundmötet: 1 Inledning med STAM (syfte, tid, agenda, mål). 2 Behovsanalys. 3 Vi som samarbetspartner. 4 Lösningen på behovet. 5 Avslut med nästa steg och konkret överenskommelse. Styr mot accepterna och ta delaccepter under vägen. Målet med mötet är inte att informera.
+- Behovsanalys: tratten börjar brett ("Kan du berätta lite om...?") och smalnar av till ett tydligt ja eller nej. Situationsfrågor (öppna, neutrala), styrfrågor (när, var, hur, vem, vilka, vad, varför), konsekvensfrågor så att kunden själv kommer till insikt, lösningsfrågor och acceptfrågor ("Är det här något du vill att vi ska hjälpa dig med?"). Behoven är som ett isberg, medvetna och omedvetna. Identifiera, förstärk, tillfredsställ. Använd både faktafrågor (logik) och attitydfrågor (känsla). Neutrala frågor före ledande.
+- Argumentation kommer efter behovsanalysen, aldrig före. Använd USP och value proposition med EFI: egenskap, fördel, innebörd. Upprepa kundens behov, få accept på behovet, lägg fram argumentet och beskriv nyttan.
+- Maktbasen: ekonomisk beslutsfattare, stark beslutspåverkare, informationsbärare och verkställare. Relationsskalan går från minus 5 till plus 5.
+
+Hur du svarar: rak, konkret och pedagogisk. Hänvisa till rätt steg i metodiken. Du svarar alltid på svenska.`
+  },
   {
     id: "hopkins", name: "Tom Hopkins", role: "Affärsstängaren", emoji: "🎯",
     tag: "Avslutsmästaren", tagBg: "#FAC775", tagColor: "#633806", avatarBg: "#FAEEDA",
@@ -452,12 +512,13 @@ const advisors = [
     id: "synthesis_profile", name: "Sammanvävt råd", role: "Panelens samlade visdom", emoji: "⚖️",
     tag: "Balanserad helhetsbild", tagBg: "#E8E4FF", tagColor: "#3c3489", avatarBg: "#EEEDFE",
     desc: "Välj denna för ett direkt balanserat råd utan att välja enskilda rådgivare. Väger samman alla perspektiv — var panelen är överens, var den skiljer sig åt — och ger max 3 konkreta nästa steg.",
-    isSynthesisProfile: true,
+    isSynthesisProfile: true, acceptCheck: true,
     persona: `Du är en neutral, erfaren säljstrateg med djup kunskap om hela säljprocessen — från prospektering och relationsbyggande till förhandling och avslut. Du har studerat och integrerat insikterna från Tom Hopkins (avslutstekniker), Neil Rackham (SPIN-frågemetodik), Challenger Sale (utmana status quo), Buying Enablement (stödja kundens interna process), strategisk B2B-försäljning, kundpsykologi och Big Five-personlighetsmodellen. Din uppgift är att ge ett balanserat, väl avvägt råd som väger samman dessa perspektiv. Du lyfter fram var olika skolor är överens, påpekar när rådet beror på kontexten, och avslutar alltid med max 3 tydliga, handlingsinriktade nästa steg. Du svarar alltid på svenska.`
   }
 ];
 
-const regularAdvisors = advisors.filter(a => !a.isSynthesisProfile);
+const featuredAdvisor = advisors.find(a => a.featured);
+const boardAdvisors = advisors.filter(a => !a.isSynthesisProfile && !a.featured);
 const synthesisAdvisor = advisors.find(a => a.isSynthesisProfile);
 
 let selected = new Set();
@@ -482,7 +543,7 @@ function renderScenarios() {
 
 function cardHTML(a) {
   return `
-    <div class="advisor-card${a.isSynthesisProfile ? ' synthesis-card' : ''}" id="card-${a.id}" onclick="toggleAdvisor('${a.id}')">
+    <div class="advisor-card${a.isSynthesisProfile ? ' synthesis-card' : ''}${a.featured ? ' featured' : ''}" id="card-${a.id}" onclick="toggleAdvisor('${a.id}')">
       <div class="check">
         <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
@@ -500,7 +561,8 @@ function cardHTML(a) {
 }
 
 function renderBoard() {
-  document.getElementById('advisorBoard').innerHTML = regularAdvisors.map(cardHTML).join('');
+  document.getElementById('advisorFeatured').innerHTML = cardHTML(featuredAdvisor);
+  document.getElementById('advisorBoard').innerHTML = boardAdvisors.map(cardHTML).join('');
   document.getElementById('advisorBoard2').innerHTML = cardHTML(synthesisAdvisor);
 }
 
@@ -513,7 +575,7 @@ function toggleAdvisor(id) {
 function updateUI() {
   const n = selected.size;
   document.getElementById('selHint').textContent = n === 0
-    ? 'Välj 1–9 rådgivare ovan'
+    ? 'Välj 1–10 rådgivare ovan'
     : `${n} rådgivare ${n > 1 ? 'valda' : 'vald'}`;
   document.getElementById('askBtn').disabled =
     n === 0 || document.getElementById('question').value.trim() === '';
@@ -533,7 +595,7 @@ function clearAll() {
   updateUI();
 }
 
-async function callAPI(apiKey, systemPrompt, messages) {
+async function callAPI(apiKey, systemPrompt, messages, withAccept) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -545,7 +607,7 @@ async function callAPI(apiKey, systemPrompt, messages) {
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
       max_tokens: 2000,
-      system: systemPrompt + FORMAT_SUFFIX,
+      system: systemPrompt + FORMAT_SUFFIX + (withAccept ? ACCEPT_SUFFIX : ''),
       messages
     })
   });
@@ -561,9 +623,32 @@ const FORMAT_SUFFIX = `
 SVARSFORMAT (följ exakt):
 Börja med en rad som bara innehåller "## SAMMANFATTNING". Skriv därefter exakt tre punkter, var och en på en egen rad som börjar med "- ". Varje punkt är en enda kort mening (max 20 ord) som fångar det viktigaste, formulerad i din roll.
 Fortsätt sedan med en rad som bara innehåller "## FÖRKLARING" och därefter din längre, utvecklade förklaring i löpande text.
-Använd inga andra rubriker och ingen markdown-formatering som ** eller #.`;
+Använd inga andra rubriker än de som anges här och ingen markdown-formatering som ** eller #.`;
+
+const ACCEPT_SUFFIX = `
+
+ACCEPT-KOLL (ska alltid med):
+De tre accepterna enligt Xplan är accept på behovet, accept på oss som samarbetspartner och accept på lösningen. De ska komma från rätt personer i kundens maktbas och finnas innan offert.
+Avsluta efter förklaringen med en rad som bara innehåller "## ACCEPT-KOLL" och därefter exakt fyra rader i detta format:
+- Behov: <en fråga säljaren bör ställa sig>. Tecken: <hur man ser att accepten är på plats>.
+- Oss som partner: <en fråga>. Tecken: <tecken>.
+- Lösning: <en fråga>. Tecken: <tecken>.
+- Rätt person: <en fråga om accepten kommer från någon i kundens maktbas>. Tecken: <tecken>.
+Anpassa frågorna och tecknen till situationen. Bedöm inte att en accept är uppnådd om det inte framgår av det säljaren har berättat. Skriv i så fall vad som behövs för att veta.`;
+
+function parseAccept(block) {
+  const rows = block.split('\n').map(l => l.trim()).filter(l => /^[-•*]\s+/.test(l)).map(l => {
+    const body = l.replace(/^[-•*]\s+/, '').replace(/\*\*/g, '');
+    const m = body.match(/^([^:]+):\s*([\s\S]*?)\s*Tecken:\s*([\s\S]*)$/i);
+    return m ? { label: m[1].trim(), q: m[2].trim(), sign: m[3].trim() } : { label: '', q: body, sign: '' };
+  });
+  return rows.length ? rows : null;
+}
 
 function parseAnswer(text) {
+  let accept = null;
+  const am = text.match(/\n\s*##\s*ACCEPT[\s-]*KOLL[^\n]*\n?([\s\S]*)$/i);
+  if (am) { accept = parseAccept(am[1]); text = text.slice(0, am.index); }
   const m = text.match(/##\s*SAMMANFATTNING[^\n]*\n([\s\S]*?)(?:\n\s*##\s*F[ÖO]RKLARING[^\n]*\n?([\s\S]*))?$/i);
   if (!m) return null;
   const clean = s => s.replace(/\*\*/g, '').trim();
@@ -574,7 +659,7 @@ function parseAnswer(text) {
   if (!bullets.length) return null;
   const rest = clean(lines.filter(l => !isBullet(l)).join('\n'));
   const details = [rest, clean(m[2] || '')].filter(Boolean).join('\n\n');
-  return { bullets, details };
+  return { bullets, details, accept };
 }
 
 function renderAnswer(el, text) {
@@ -614,6 +699,20 @@ function renderAnswer(el, text) {
     txt.textContent = p.details;
     det.append(lab, txt);
     el.appendChild(det);
+  }
+
+  if (p.accept) {
+    const mk = (tag, cls, text) => { const n = document.createElement(tag); n.className = cls; if (text) n.textContent = text; return n; };
+    const box = mk('div', 'ans-accept');
+    box.appendChild(mk('div', 'ans-accept-title', 'Har du säkerställt de tre accepterna?'));
+    p.accept.forEach(r => {
+      const row = mk('div', 'ans-accept-row');
+      if (r.label) row.appendChild(mk('div', 'ans-accept-label', r.label));
+      row.appendChild(mk('div', 'ans-accept-q', r.q));
+      if (r.sign) row.appendChild(mk('div', 'ans-accept-sign', 'Tecken: ' + r.sign));
+      box.appendChild(row);
+    });
+    el.appendChild(box);
   }
 }
 
@@ -678,7 +777,7 @@ async function askAdvisorsRun() {
   await Promise.all(selectedRegular.map(async a => {
     const bodyEl = document.getElementById('body-' + a.id);
     try {
-      const text = await callAPI(apiKey, a.persona, conversationHistory);
+      const text = await callAPI(apiKey, a.persona, conversationHistory, a.acceptCheck);
       renderAnswer(bodyEl, text);
       advisorResponses[a.name] = text;
     } catch (e) {
@@ -690,7 +789,7 @@ async function askAdvisorsRun() {
   if (hasSynthesisProfile) {
     const bodyEl = document.getElementById('body-' + synthesisAdvisor.id);
     try {
-      const text = await callAPI(apiKey, synthesisAdvisor.persona, conversationHistory);
+      const text = await callAPI(apiKey, synthesisAdvisor.persona, conversationHistory, true);
       renderAnswer(bodyEl, text);
     } catch (e) {
       bodyEl.className = 'response-body error';
@@ -744,7 +843,7 @@ Rådgivarnas svar:
 ${advisorSummary}`;
 
     try {
-      const synthText = await callAPI(apiKey, synthesisPrompt, [{ role: "user", content: "Gör din sammanvägda analys." }]);
+      const synthText = await callAPI(apiKey, synthesisPrompt, [{ role: "user", content: "Gör din sammanvägda analys." }], true);
       renderAnswer(document.getElementById('body-auto-synthesis'), synthText);
     } catch (e) {
       document.getElementById('body-auto-synthesis').className = 'response-body error';
