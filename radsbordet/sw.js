@@ -3,7 +3,7 @@
 // API-anrop (api.anthropic.com) rörs aldrig och går alltid direkt mot nätet.
 // Byt versionsnummer i CACHE_NAME när HTML-filen ändras, annars visas den gamla från cachen.
 
-const CACHE_NAME = 'radsbordet-v1';
+const CACHE_NAME = 'radsbordet-v2';
 const ASSETS = [
   './',
   './index.html',

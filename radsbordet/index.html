@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="sv"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Rådsbordet</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#02735E">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Rådsbordet">
   <link rel="apple-touch-icon" href="icon-192.png">
   <style>
@@ -139,11 +140,39 @@
     .section-divider { border: none; border-top: 1px solid #e5e5e5; margin: 1.75rem 0 0; }
     .followup-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin: 0.75rem 0; }
 
-    [hidden] { display: none !important; }
+    @media (max-width: 620px) {
+      .board { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .board-row2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      #advisorFeatured { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+
+    /* Svar: sammanfattning + förklaring */
+    .round { display: flex; flex-direction: column; gap: 1rem; }
+    .response-body.structured { white-space: normal; }
+    .ans-summary { background: #E3F3EF; border: 1px solid #B5DCD2; border-radius: 10px; padding: 11px 15px; margin-bottom: 14px; }
+    .ans-summary-title, .ans-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
+    .ans-summary-title { color: #02735E; margin-bottom: 5px; }
+    .ans-summary ul { list-style: disc; padding-left: 1.15em; }
+    .ans-summary li { font-size: 14px; line-height: 1.55; color: #014F40; margin-top: 3px; }
+    .ans-label { color: #888; margin-bottom: 5px; }
+    .ans-text { white-space: pre-wrap; }
+
+    /* Scenariokategorier som flikar (laptop) */
+    .cat-tabs { display: flex; flex-wrap: wrap; gap: 0 2px; border-bottom: 1px solid #d6d4cc; margin: 0 0 14px; }
+    .cat-tab {
+      font-family: inherit; font-size: 13px; font-weight: 700; color: #444;
+      background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -1px;
+      padding: 9px 9px; cursor: pointer; white-space: nowrap; transition: color 0.15s, border-color 0.15s;
+    }
+    .cat-tab:hover { color: #000; border-bottom-color: #bbb; }
+    .cat-tab.on { color: #000; border-bottom-color: #000; }
+    .cat-tab.has::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #2E9A83; margin-left: 6px; vertical-align: middle; }
+    .scenario-section { margin: 0 !important; }
+    .scenario-section .scenario-label { display: none; }
 
     /* Villkor och ansvarsfriskrivning */
     .disclaimer-line { font-size: 12px; line-height: 1.45; color: #777; margin-top: 7px; }
-    .disclaimer-line a, .site-foot a { color: #02735E; text-decoration: underline; cursor: pointer; }
+    .disclaimer-line a, .site-foot a, .terms-link { color: #02735E; text-decoration: underline; cursor: pointer; }
     .site-foot { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e0ded6; font-size: 12px; line-height: 1.5; color: #888; }
     .ans-foot { margin-top: 12px; font-size: 11px; color: #999; }
     .terms-gate { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 16px; }
@@ -157,23 +186,150 @@
     .terms-btn:disabled { opacity: 0.38; cursor: not-allowed; }
     body.terms-open { overflow: hidden; }
 
-    @media (max-width: 620px) {
-      .terms-gate { align-items: flex-end; padding: 0; }
-      .terms-card { max-width: none; border-radius: 18px 18px 0 0; max-height: 92vh; max-height: 92dvh; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); }
-      .board { grid-template-columns: repeat(2, minmax(0,1fr)); }
-      .board-row2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
-    }
+    /* Accept-koll */
+    .ans-accept { background: #f1faf6; border: 1px solid #c4e6d8; border-radius: 10px; padding: 11px 15px; margin-top: 14px; }
+    .ans-accept-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; color: #0f6e56; margin-bottom: 8px; }
+    .ans-accept-row + .ans-accept-row { margin-top: 9px; padding-top: 9px; border-top: 1px solid #d8eee4; }
+    .ans-accept-label { font-size: 13px; font-weight: 600; color: #085041; }
+    .ans-accept-q { font-size: 14px; line-height: 1.5; color: #1a1a1a; margin-top: 1px; }
+    .ans-accept-sign { font-size: 13px; line-height: 1.5; color: #5f6b66; margin-top: 2px; }
+
+    /* Xplan-kortet (utvalt) */
+    #advisorFeatured { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+    #advisorFeatured .advisor-card { grid-column: span 2; }
+    .advisor-card.featured { border-color: #b9e0d1; }
+    .advisor-card.featured:hover { border-color: #5dbb98; }
+    .advisor-card.featured.selected { border-color: #1d9e75; background: #e8f7f1; }
+    .advisor-card.featured.selected .advisor-name { color: #085041; }
+    .advisor-card.featured.selected .advisor-desc { color: #0f6e56; border-top-color: #9fe1cb; }
+    .advisor-card.featured .check { background: #1d9e75; }
+
+    /* Mobilens delar: dolda på dator */
+    [hidden] { display: none !important; }
+    .m-header, .m-scenarios, .m-hint, .m-tabs, .m-bar, .m-only, .ans-toggle,
+    .sheet-backdrop, .desc-sheet { display: none; }
+  </style>
+  <style id="mobileCss" media="(max-width: 700px)">
+    html, body { height: 100%; }
+    body { padding: 0; height: 100vh; height: 100dvh; overflow: hidden; }
+    .container { display: flex; flex-direction: column; height: 100vh; height: 100dvh; max-width: none; margin: 0; }
+
+    header, .scenario-section, .cat-tabs, .board-label, .actions { display: none; }
+
+    /* Toppfält */
+    .m-header { display: flex; align-items: center; gap: 2px; padding: calc(4px + env(safe-area-inset-top)) 6px 2px 14px; min-height: 52px; flex-shrink: 0; }
+    body:not([data-step="1"]) .m-header { padding-left: 2px; }
+    .m-title { flex: 1; font-size: 18px; font-weight: 600; }
+    .m-count { display: none; font-size: 13px; color: #777; margin-right: 2px; }
+    body[data-step="2"] .m-count { display: block; }
+    .m-icon { background: none; border: none; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #444; cursor: pointer; border-radius: 12px; flex-shrink: 0; }
+    .m-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    body[data-step="1"] #mBack { display: none; }
+    #mAction .i-trash { display: none; }
+    body[data-step="3"] #mAction .i-gear { display: none; }
+    body[data-step="3"] #mAction .i-trash { display: block; }
+
+    /* Vilka delar som syns i vilket steg */
+    .m-scenarios, .input-area, #advisorWrap, .m-hint, .m-tabs, .responses, .mb1, .mb2, .mb3 { display: none; }
+
+    /* Steg 1: situation */
+    body[data-step="1"] .m-scenarios { display: flex; flex-direction: column; gap: 7px; padding: 2px 12px 8px; overflow-y: auto; min-height: 0; flex: 0 1 auto; }
+    body[data-step="1"] .input-area { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 84px; padding: 0 12px 10px; margin: 0; }
+    .input-area textarea { flex: 1; resize: none; min-height: 72px; }
+    .m-field label { display: block; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; margin-bottom: 3px; }
+    .m-field select { width: 100%; height: 42px; font-size: 16px; padding: 0 10px; border: 1px solid #ccc; border-radius: 10px; background: #fff; color: #555; font-family: inherit; }
+    .m-field select.has { border-color: #2E9A83; background: #F3FAF8; color: #014F40; font-weight: 500; }
+
+    /* Steg 2: rådgivare (3 x 3) */
+    .board, .board-row2 { display: contents; }
+    body[data-step="2"] #advisorWrap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 4px 12px; align-content: center; flex: 1; min-height: 0; overflow-y: auto; }
+    body[data-step="2"] .m-hint { display: block; text-align: center; font-size: 12px; color: #999; padding: 6px 12px 8px; }
+    .advisor-card { padding: 10px 4px 8px; align-items: center; text-align: center; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+    .card-top { flex-direction: column; align-items: center; gap: 5px; margin-bottom: 0; }
+    .avatar { margin-top: 0; width: 40px; height: 40px; font-size: 19px; }
+    .card-title { flex: 0 1 auto; text-align: center; }
+    .advisor-name { font-size: 12px; }
+    .advisor-role, .advisor-tag, .advisor-desc { display: none; }
+    .check { top: 5px; right: 5px; }
+    #advisorFeatured { display: contents; }
+    #advisorFeatured .advisor-card { grid-column: 1 / -1; flex-direction: row; align-items: center; text-align: left; padding: 10px 14px; }
+    #advisorFeatured .card-top { flex-direction: row; align-items: center; gap: 12px; }
+    #advisorFeatured .card-title { text-align: left; }
+    #advisorFeatured .advisor-name { font-size: 14px; }
+    #advisorFeatured .advisor-role { display: block; font-size: 12px; }
+    .ans-accept-q { font-size: 15px; }
+
+    /* Steg 3: svar i flikar */
+    body[data-step="3"] .m-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 2px 12px 8px; flex-shrink: 0; }
+    .m-tab { font-family: inherit; font-size: 14px; padding: 7px 14px; border-radius: 20px; border: 1px solid #ddd; background: #fff; color: #555; white-space: nowrap; cursor: pointer; }
+    .m-tab.on { background: #E3F3EF; border-color: #2E9A83; color: #014F40; font-weight: 600; }
+    body[data-step="3"] .responses { display: block; flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0 12px 10px; -webkit-overflow-scrolling: touch; }
+    .round { display: block; }
+    .round:not(:last-child) { display: none; }
+    .round .response-card { display: none; }
+    .round .response-card.m-active { display: block; }
+    .synthesis-divider, .section-divider, .followup-label { display: none; }
+    .response-body { font-size: 15px; }
+    .ans-toggle { display: block; width: 100%; font-family: inherit; font-size: 14px; font-weight: 500; color: #02735E; background: none; border: 1px solid #B5DCD2; border-radius: 10px; padding: 10px; margin: 0 0 14px; cursor: pointer; }
+    .structured:not(.expanded) .ans-detail { display: none; }
+    .ans-summary { margin-bottom: 10px; }
+    .ans-summary li { font-size: 15px; }
+
+    /* Nedre fält */
+    .m-bar { display: block; flex-shrink: 0; padding: 8px 12px calc(10px + env(safe-area-inset-bottom)); background: #f5f4f0; border-top: 1px solid #e5e5e5; }
+    body[data-step="1"] .mb1, body[data-step="2"] .mb2 { display: block; }
+    body[data-step="3"] .mb3 { display: flex; gap: 8px; }
+    .m-cta { width: 100%; padding: 14px; font-size: 16px; font-weight: 600; font-family: inherit; border: none; border-radius: 12px; background: #02735E; color: #fff; cursor: pointer; }
+    .m-cta:disabled { opacity: 0.38; }
+    .mb3 input { flex: 1; min-width: 0; font-size: 16px; font-family: inherit; padding: 12px 14px; border: 1px solid #ccc; border-radius: 12px; background: #fff; }
+    .m-send { width: 48px; border: none; border-radius: 12px; background: #02735E; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .m-send svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Inställningar som bottenpanel (API-nyckelfältet) */
+    .api-banner { display: none; }
+    body.sheet-open .api-banner { display: flex; flex-direction: column; align-items: stretch; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; margin: 0; border-width: 1px 0 0; border-radius: 18px 18px 0 0; padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); gap: 10px; }
+    .api-banner input { min-width: 0; width: 100%; padding: 11px 12px; }
+    .api-banner .m-only { display: block; }
+    .sheet-head.m-only { display: flex; justify-content: space-between; align-items: center; font-size: 17px; font-weight: 600; color: #1a1a1a; }
+    .sheet-close { background: none; border: none; font-size: 22px; line-height: 1; padding: 6px 10px; color: #7a5800; cursor: pointer; }
+    body.sheet-open .sheet-backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 25; }
+
+    /* Villkor i mobilläge */
+    .site-foot { display: none; }
+    .disclaimer-line { flex-shrink: 0; font-size: 11.5px; }
+    .terms-gate { align-items: flex-end; padding: 0; }
+    .terms-card { max-width: none; border-radius: 18px 18px 0 0; max-height: 92vh; max-height: 92dvh; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); }
+
+    /* Rådgivarbeskrivning (långtryck) */
+    .desc-sheet { display: flex; position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,0.35); align-items: flex-end; }
+    .desc-card { background: #fff; width: 100%; border-radius: 18px 18px 0 0; padding: 18px 18px calc(20px + env(safe-area-inset-bottom)); }
+    .desc-name { font-size: 18px; font-weight: 600; }
+    .desc-role { font-size: 13px; color: #888; margin-top: 2px; }
+    .desc-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 10px; margin-top: 8px; }
+    .desc-text { font-size: 15px; line-height: 1.6; color: #333; margin: 12px 0 16px; }
   </style>
 </head>
-<body>
+<body data-step="1">
 <div class="container">
 
+  <div class="m-header">
+    <button class="m-icon" id="mBack" type="button" aria-label="Tillbaka"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 5 8 12 15 19"/></svg></button>
+    <div class="m-title" id="mTitle">Rådsbordet</div>
+    <span class="m-count" id="mCount"></span>
+    <button class="m-icon" id="mAction" type="button" aria-label="Inställningar">
+      <svg class="i-gear" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="12.5" y2="6"/><line x1="17.5" y1="6" x2="20" y2="6"/><circle cx="15" cy="6" r="2.5"/><line x1="4" y1="12" x2="5.5" y2="12"/><line x1="10.5" y1="12" x2="20" y2="12"/><circle cx="8" cy="12" r="2.5"/><line x1="4" y1="18" x2="11.5" y2="18"/><line x1="16.5" y1="18" x2="20" y2="18"/><circle cx="14" cy="18" r="2.5"/></svg>
+      <svg class="i-trash" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 7 20 7"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>
+    </button>
+  </div>
+
   <div class="api-banner">
+    <div class="sheet-head m-only"><span>Inställningar</span><button type="button" class="sheet-close" id="sheetClose" aria-label="Stäng">✕</button></div>
     <label for="apiKey">🔑 Din API-nyckel:</label>
-    <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off">
+    <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off" />
     <a href="#" id="clearKey" class="key-clear" hidden>Rensa nyckel</a>
     <div class="hint">Hämta din nyckel på <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> — sparas bara lokalt i webbläsaren.</div>
     <div class="hint"><a href="#" id="termsLinkBanner">Villkor och ansvarsfriskrivning</a></div>
+    <div class="hint m-only">Installera som app: iPhone: Dela → Lägg till på hemskärmen. Android: menyn → Installera app.</div>
   </div>
 
   <header>
@@ -181,243 +337,46 @@
     <p>Din panel inför och i kundmötet</p>
   </header>
 
+  <div class="m-scenarios" id="mScenarios"></div>
+
+  <div class="cat-tabs" id="catTabs" role="tablist" aria-label="Scenariokategorier"></div>
+
   <div class="scenario-section">
     <div class="scenario-label">Prospektering</div>
-    <div class="scenario-row" id="chips-prospektering">
-      <span class="chip" data-text="Jag ska skicka ett kontaktmail till en VD på ett medelstort företag som jag aldrig träffat. Hur skriver jag ett meddelande som faktiskt får svar?">Kontaktmail</span>
-    
-      <span class="chip" data-text="Jag vill ta kontakt med en potentiell kund via LinkedIn utan att verka säljig eller desperat. Hur formulerar jag mitt första meddelande?">LinkedIn-kontakt</span>
-    
-      <span class="chip" data-text="Jag ska ringa kallt till en beslutsfattare på ett stort företag. Hur öppnar jag samtalet och tar mig förbi grindvakten?">Cold call</span>
-    
-      <span class="chip" data-text="En befintlig kund har nämnt ett annat företag som kan vara intresserade. Hur ber jag om en varm introduktion på bästa sätt?">Varm introduktion</span>
-    
-      <span class="chip" data-text="Jag vill använda sociala medier mer systematiskt för att hitta och värma upp prospekt. Vad är ett bra angreppssätt?">Socialt säljande</span>
-    </div>
+    <div class="scenario-row" id="chips-prospektering"></div>
   </div>
   <div class="scenario-section" style="margin-top:10px;">
-    <div class="scenario-label">Mötesöppning</div>
-    <div class="scenario-row" id="chips-mote">
-      <span class="chip" data-text="Jag vill öppna mitt nästa kundmöte med en skarp insikt om deras bransch snarare än att prata om mitt erbjudande. Hur gör jag det på ett trovärdigt sätt?">Öppna med insikt</span>
-    
-      <span class="chip" data-text="Hur öppnar jag ett möte med kraftfulla frågor som direkt engagerar kunden och visar att jag förstår deras situation?">Öppna med frågor</span>
-    
-      <span class="chip" data-text="Hur sätter jag en agenda för mötet som känns strukturerad men inte stel, och som ger mig kontroll över processen?">Öppna med agenda</span>
-    
-      <span class="chip" data-text="Det är stor skillnad att öppna ett videomöte jämfört med ett fysiskt möte. Hur skapar jag rätt stämning och engagemang digitalt?">Digitalt möte</span>
-    
-      <span class="chip" data-text="Jag ska träffa en kund igen efter att affären legat still i månader. Hur öppnar jag mötet utan att det känns awkward?">Efter lång tystnad</span>
-    </div>
+    <div class="scenario-label">Kundmöte</div>
+    <div class="scenario-row" id="chips-mote"></div>
+  </div>
+  <div class="scenario-section" style="margin-top:10px;">
+    <div class="scenario-label">Behovsanalys</div>
+    <div class="scenario-row" id="chips-behov"></div>
   </div>
   <div class="scenario-section" style="margin-top:10px;">
     <div class="scenario-label">Köpresan &amp; Maktbasen</div>
-    <div class="scenario-row" id="chips-kopresa">
-      <span class="chip" data-text="Jag behöver förstå hur kunden faktiskt fattar beslut internt — vem som är involverad, i vilken ordning, och vad som driver processen framåt. Hur kartlägger jag deras köpprocess?">Kartlägg beslutsprocessen</span>
-    
-      <span class="chip" data-text="Jag är ny i en kundrelation och behöver förstå vem som egentligen har makt och inflytande i organisationen. Hur kartlägger jag maktbasen på ett systematiskt sätt?">Identifiera maktbasen</span>
-    
-      <span class="chip" data-text="Jag har identifierat ett antal nyckelkontakter hos kunden men vet inte hur jag ska bedöma deras faktiska inflytande, inställning till oss och potential. Hur utvärderar jag maktbasen?">Utvärdera maktbasen</span>
-    
-      <span class="chip" data-text="Kunden verkar köpvillig men processen stannar internt — någon eller något blockerar beslutet. Hur identifierar och hanterar jag interna blockerare hos kunden?">Interna blockerare</span>
-    
-      <span class="chip" data-text="Det finns flera intressenter med delvis motstridiga agendor hos kunden. Hur hjälper jag min kontakt att bygga intern konsensus och driva processen framåt?">Bygga intern konsensus</span>
-    
-      <span class="chip" data-text="Kunden verkar överväldigad av beslutet — för många alternativ, för mycket risk, för komplex intern process. Hur förenklar jag deras beslutssituation?">Förenkla kundens beslut</span>
-    
-      <span class="chip" data-text="Kunden har gjort 80% av sin research innan vi träffas första gången. De vet redan vad de vill ha. Hur möter jag dem där de är och tillför värde?">Kunden är redan informerad</span>
-    
-      <span class="chip" data-text="Jag har flera kontakter hos kunden med olika prioriteringar och delvis motstridiga intressen. Hur navigerar jag mellan dem utan att förlora någon?">Motstridiga intressenter</span>
-    </div>
+    <div class="scenario-row" id="chips-kopresa"></div>
   </div>
   <div class="scenario-section" style="margin-top:10px;">
     <div class="scenario-label">Relationsresan</div>
-    <div class="scenario-row" id="chips-relation">
-      <span class="chip" data-text="Jag har en kontakt hos kunden som verkar positiv till oss men som inte aktivt förespråkar oss internt. Hur lyfter jag den personen till att bli en verklig sponsor och champion för oss?">Från kontakt till sponsor</span>
-    
-      <span class="chip" data-text="En av mina viktigaste kontakter hos kunden har blivit mer distanserad och svarar inte lika snabbt längre. Något har förändrats. Hur hanterar jag det?">Kall eller distanserad kontakt</span>
-    
-      <span class="chip" data-text="Affären är stängd och nästa upphandling är 18 månader bort. Hur håller jag relationerna varma och förblir relevant utan att verka säljig under mellantiden?">Håll relationen varm</span>
-    
-      <span class="chip" data-text="Min viktigaste kontakt och sponsor hos kunden har precis meddelat att hen slutar. Hur hanterar jag detta personbyte utan att tappa förankring och förtroende?">Nyckelkontakt slutar</span>
-    
-      <span class="chip" data-text="Jag har en stark relation med en person i kundorganisationen men är orolig för att vara för beroende av denna enda kontakt. Hur bygger jag bredare förankring?">Bred förankring</span>
-    
-      <span class="chip" data-text="Jag har kontakter i maktbasen men relationerna är ytliga och transaktionella. Hur utvecklar jag djupare och mer genuina relationer med varje individ?">Utveckla individuella kontakter</span>
-    </div>
+    <div class="scenario-row" id="chips-relation"></div>
   </div>
   <div class="scenario-section" style="margin-top:10px;">
     <div class="scenario-label">Förhandling</div>
-    <div class="scenario-row" id="chips-forhandling">
-      <span class="chip" data-text="Vi är nästan i mål men kunden pressar plötsligt på en betydande rabatt och hotar att dra sig ur om vi inte går med. Hur hanterar jag det utan att ge bort marginalen?">Rabatt i sista stund</span>
-    
-      <span class="chip" data-text="Kunden visar upp ett lägre bud från en konkurrent och säger 'matcha det här eller så tar vi dem'. Hur svarar jag?">Konkurrentbud</span>
-    
-      <span class="chip" data-text="I förhandlingen använder kunden tystnad och långa pauser som ett medvetet taktiskt verktyg för att pressa mig. Hur hanterar jag det?">Tystnad som vapen</span>
-    
-      <span class="chip" data-text="När vi är nära avslut säger kunden att de måste ha styrelsens godkännande — något de inte nämnt tidigare. Är det en taktik, och hur går jag vidare?">Styrelsebeslut</span>
-    
-      <span class="chip" data-text="Kunden vill plötsligt omförhandla villkor som vi redan kommit överens om. Hur hanterar jag det utan att tappa kontrollen eller förlora affären?">Omförhandling</span>
-    
-      <span class="chip" data-text="Inför en förhandling — hur tänker jag kring vad jag kan ge, vad jag ska hålla fast vid, och hur jag skapar ett utbyte som känns bra för båda parter?">Rätt avvägningar</span>
-    
-      <span class="chip" data-text="Kunden fokuserar bara på priset men jag vill flytta förhandlingen till att handla om leverans, betalvillkor, support och avtalslängd istället. Hur gör jag det?">Förhandla brett</span>
-    
-      <span class="chip" data-text="Vi har förhandlat länge och är nära en överenskommelse. Hur landar jag förhandlingen på ett sätt som känns bra för båda parter och inte skapar dålig stämning inför samarbetet?">Landa förhandlingen</span>
-    </div>
+    <div class="scenario-row" id="chips-forhandling"></div>
   </div>
   <div class="scenario-section" style="margin-top:10px;">
     <div class="scenario-label">Invändningar &amp; avslut</div>
-    <div class="scenario-row" id="chips-avslut">
-      <span class="chip" data-text="Kunden sa 'ert pris är för högt' precis i slutet av en bra demo. Vad är mitt bästa drag?">Prisinvändning</span>
-    
-      <span class="chip" data-text="Jag har fastnat i utvärdering i 3 månader. Min kontaktperson har tystnat. Hur återknyter jag kontakten utan att vara påträngande?">Affär som stannat</span>
-    
-      <span class="chip" data-text="Jag håller på att förlora mot en konkurrent som underbud vårt pris med 30%. Kunden verkar bara bry sig om kostnad. Hur slåss jag tillbaka?">Konkurrens på pris</span>
-    
-      <span class="chip" data-text="Beslutsfattaren har precis bytts ut — ny chef som jag aldrig träffat. Hur bygger jag snabbt trovärdighet och håller affären igång?">Ny beslutsfattare</span>
-    
-      <span class="chip" data-text="Min kund sa att de vill 'vänta till nästa kvartal'. Hur skapar jag brådska utan att vara påträngande?">Skapa rörelse</span>
-    </div>
+    <div class="scenario-row" id="chips-avslut"></div>
   </div>
 
   <div class="board-label">Välj dina rådgivare</div>
-  <div class="board" id="advisorBoard">
-    <div class="advisor-card" id="card-hopkins" onclick="toggleAdvisor('hopkins')">
-      <div class="check">
-        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-      </div>
-      <div class="card-top">
-        <div class="avatar" style="background:#FAEEDA">🎯</div>
-        <div class="card-title">
-          <div class="advisor-name">Tom Hopkins</div>
-          <div class="advisor-role">Affärsstängaren</div>
-          <div class="advisor-tag" style="background:#FAC775;color:#633806">Avslutsmästaren</div>
-        </div>
-      </div>
-      <div class="advisor-desc">Världens mest kände säljcoach. Ger konkreta, tekniska avslutstekniker och specifika formuleringar för att hantera invändningar och fråga efter affären — utan ursäkt.</div>
-    </div>
-  
-    <div class="advisor-card" id="card-strategist" onclick="toggleAdvisor('strategist')">
-      <div class="check">
-        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-      </div>
-      <div class="card-top">
-        <div class="avatar" style="background:#E6F1FB">♟️</div>
-        <div class="card-title">
-          <div class="advisor-name">Priya Nair</div>
-          <div class="advisor-role">Strategen</div>
-          <div class="advisor-tag" style="background:#B5D4F4;color:#0C447C">Helhetsbild</div>
-        </div>
-      </div>
-      <div class="advisor-desc">Tänker i system och maktkartor. Hjälper dig ligga tre drag före — vem som egentligen bestämmer, vilka politiska dynamiker som spelar in, och hur du positionerar värde på rätt nivå.</div>
-    </div>
-  
-    <div class="advisor-card" id="card-empath" onclick="toggleAdvisor('empath')">
-      <div class="check">
-        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-      </div>
-      <div class="card-top">
-        <div class="avatar" style="background:#E1F5EE">🤝</div>
-        <div class="card-title">
-          <div class="advisor-name">Jordan Lee</div>
-          <div class="advisor-role">Empatikern</div>
-          <div class="advisor-tag" style="background:#9FE1CB;color:#085041">Förtroende först</div>
-        </div>
-      </div>
-      <div class="advisor-desc">Tror att de bästa säljarna är de bästa lyssnarna. Coachar i aktivt lyssnande, rätt frågor, emotionella signaler och att bygga förtroende som håller längre än en enskild affär.</div>
-    </div>
-  
-    <div class="advisor-card" id="card-veteran" onclick="toggleAdvisor('veteran')">
-      <div class="check">
-        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-      </div>
-      <div class="card-top">
-        <div class="avatar" style="background:#FAECE7">🏆</div>
-        <div class="card-title">
-          <div class="advisor-name">Don Hargreaves</div>
-          <div class="advisor-role">Veteranen</div>
-          <div class="advisor-tag" style="background:#F5C4B3;color:#712B13">Stridstestad</div>
-        </div>
-      </div>
-      <div class="advisor-desc">35 år i fält — från dörr-till-dörr till Fortune 500. Skär igenom teori och ger råd grundade i vad som faktiskt fungerar. Pragmatisk, ibland brysk, alltid ärlig.</div>
-    </div>
-  
-    <div class="advisor-card" id="card-rackham" onclick="toggleAdvisor('rackham')">
-      <div class="check">
-        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-      </div>
-      <div class="card-top">
-        <div class="avatar" style="background:#EEEDFE">🔬</div>
-        <div class="card-title">
-          <div class="advisor-name">Neil Rackham</div>
-          <div class="advisor-role">SPIN-metoden</div>
-          <div class="advisor-tag" style="background:#CECBF6;color:#3C3489">Forskningsbaserad</div>
-        </div>
-      </div>
-      <div class="advisor-desc">Analyserade 35 000 säljsamtal och hittade vad som faktiskt skiljer toppsäljare från övriga. Coachar genom SPIN-frågorna: Situation, Problem, Implication och Need-Payoff — för att kunden ska artikulera värdet själv.</div>
-    </div>
-  
-    <div class="advisor-card" id="card-big5" onclick="toggleAdvisor('big5')">
-      <div class="check">
-        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-      </div>
-      <div class="card-top">
-        <div class="avatar" style="background:#EAF3DE">🧠</div>
-        <div class="card-title">
-          <div class="advisor-name">Dr. Sofia Lindgren</div>
-          <div class="advisor-role">Beteendevetaren</div>
-          <div class="advisor-tag" style="background:#C0DD97;color:#27500A">Big 5 &amp; psykologi</div>
-        </div>
-      </div>
-      <div class="advisor-desc">Specialiserad på Big Five/OCEAN-modellen i säljkontext. Hjälper dig läsa av kundens personlighetsprofil och anpassa kommunikation, tempo och argumentation efter om kunden är hög eller låg på Öppenhet, Samvetsgrannhet, Extraversion, Vänlighet och Neuroticism.</div>
-    </div>
-  
-    <div class="advisor-card" id="card-challenger" onclick="toggleAdvisor('challenger')">
-      <div class="check">
-        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-      </div>
-      <div class="card-top">
-        <div class="avatar" style="background:#FFF0E0">⚡</div>
-        <div class="card-title">
-          <div class="advisor-name">Alex Drummond</div>
-          <div class="advisor-role">Utmanaren</div>
-          <div class="advisor-tag" style="background:#FFD6A5;color:#7A3800">Challenger-metoden</div>
-        </div>
-      </div>
-      <div class="advisor-desc">Baserad på Challenger Sale (Dixon &amp; Adamson). Utmanar kundens status quo med insikter de inte hade själva — omformulerar problemet, skapar konstruktiv spänning och driver kunden mot förändring.</div>
-    </div>
-  
-    <div class="advisor-card" id="card-buyingcoach" onclick="toggleAdvisor('buyingcoach')">
-      <div class="check">
-        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-      </div>
-      <div class="card-top">
-        <div class="avatar" style="background:#F3EAFC">🗺️</div>
-        <div class="card-title">
-          <div class="advisor-name">Dr. Lena Forsgren</div>
-          <div class="advisor-role">Köpcoachen</div>
-          <div class="advisor-tag" style="background:#E8D5F5;color:#5C1A8A">Buying Enablement</div>
-        </div>
-      </div>
-      <div class="advisor-desc">Baserad på Gartner/Adamson Buying Enablement. Hjälper dig förstå och stödja kundens interna köpprocess — konsensubyggande, hantera interna blockerare och förenkla ett beslut som ofta är mer komplext internt hos kunden än i din säljprocess.</div>
-    </div>
+  <div id="advisorWrap">
+    <div id="advisorFeatured"></div>
+    <div class="board" id="advisorBoard"></div>
+    <div class="board-row2" id="advisorBoard2"></div>
   </div>
-  <div class="board-row2" id="advisorBoard2">
-    <div class="advisor-card synthesis-card" id="card-synthesis_profile" onclick="toggleAdvisor('synthesis_profile')">
-      <div class="check">
-        <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
-      </div>
-      <div class="card-top">
-        <div class="avatar" style="background:#E3F3EF">⚖️</div>
-        <div class="card-title">
-          <div class="advisor-name">Sammanvävt råd</div>
-          <div class="advisor-role">Panelens samlade visdom</div>
-          <div class="advisor-tag" style="background:#D5EDE6;color:#014F40">Balanserad helhetsbild</div>
-        </div>
-      </div>
-      <div class="advisor-desc">Välj denna för ett direkt balanserat råd utan att välja enskilda rådgivare. Väger samman alla perspektiv — var panelen är överens, var den skiljer sig åt — och ger max 3 konkreta nästa steg.</div>
-    </div>
-  </div>
+  <div class="m-hint">Håll ned en rådgivare för beskrivning</div>
 
   <div class="input-area">
     <textarea id="question" placeholder="Beskriv din situation eller utmaning — ju mer sammanhang, desto bättre coaching får du..."></textarea>
@@ -425,17 +384,29 @@
   </div>
 
   <div class="actions">
-    <span class="sel-hint" id="selHint">Välj 1–9 rådgivare ovan</span>
+    <span class="sel-hint" id="selHint">Välj 1–10 rådgivare ovan</span>
     <div class="btn-row">
       <button class="btn-clear" onclick="clearAll()">Rensa</button>
-      <button class="btn-ask" id="askBtn" onclick="askAdvisors()" disabled="">Få coaching →</button>
+      <button class="btn-ask" id="askBtn" onclick="askAdvisors()" disabled>Få coaching →</button>
     </div>
   </div>
 
+  <div class="m-tabs" id="mTabs" hidden></div>
   <div class="responses" id="responses"></div>
 
   <div class="site-foot">Utgivare: Xplan Affärsutveckling AB. Rådsbordet är ett AI-verktyg för övning och inspiration. <a href="#" class="terms-link">Villkor och ansvarsfriskrivning</a></div>
+
+  <div class="m-bar">
+    <div class="mb1"><button type="button" class="m-cta" id="mNext" disabled>Välj rådgivare →</button></div>
+    <div class="mb2"><button type="button" class="m-cta" id="mGo" disabled>Få coaching</button></div>
+    <div class="mb3">
+      <input type="text" id="mFollow" placeholder="Följdfråga…" enterkeyhint="send" autocomplete="off" />
+      <button type="button" class="m-send" id="mSend" aria-label="Skicka följdfråga"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
+    </div>
+  </div>
 </div>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
 
 <div class="terms-gate" id="termsGate" hidden role="dialog" aria-modal="true" aria-labelledby="termsTitle">
   <div class="terms-card">
@@ -469,6 +440,16 @@
   </div>
 </div>
 
+<div class="desc-sheet" id="descSheet" hidden>
+  <div class="desc-card">
+    <div class="desc-name" id="descName"></div>
+    <div class="desc-role" id="descRole"></div>
+    <span class="desc-tag" id="descTag"></span>
+    <p class="desc-text" id="descText"></p>
+    <button type="button" class="m-cta" id="descClose">Stäng</button>
+  </div>
+</div>
+
 <script>
 const scenarios = {
   "chips-prospektering": [
@@ -476,14 +457,26 @@ const scenarios = {
     { label: "LinkedIn-kontakt", text: "Jag vill ta kontakt med en potentiell kund via LinkedIn utan att verka säljig eller desperat. Hur formulerar jag mitt första meddelande?" },
     { label: "Cold call", text: "Jag ska ringa kallt till en beslutsfattare på ett stort företag. Hur öppnar jag samtalet och tar mig förbi grindvakten?" },
     { label: "Varm introduktion", text: "En befintlig kund har nämnt ett annat företag som kan vara intresserade. Hur ber jag om en varm introduktion på bästa sätt?" },
-    { label: "Socialt säljande", text: "Jag vill använda sociala medier mer systematiskt för att hitta och värma upp prospekt. Vad är ett bra angreppssätt?" }
+    { label: "Social selling", text: "Jag vill använda sociala medier mer systematiskt för att hitta och värma upp prospekt. Vad är ett bra angreppssätt?" }
   ],
   "chips-mote": [
+    { label: "Linjen i kundmötet", text: "Jag ska ha ett kundmöte och vill följa en tydlig linje: inledning, behovsanalys, vi som samarbetspartner, lösningen på behovet och avslut med nästa steg och en konkret överenskommelse. Hur bygger jag mötet så att jag styr mot accepterna och tar delaccepter under vägen, i stället för att bara informera?" },
+    { label: "Inledning med STAM", text: "Hur öppnar jag kundmötet med STAM: syfte (varför vi har mötet), tid (jag stämmer av att den överenskomna tiden gäller), agenda (jag säljer in linjen i mötet) och mål (var jag vill vara när mötet är slut)? Ge mig formuleringar jag kan använda." },
     { label: "Öppna med insikt", text: "Jag vill öppna mitt nästa kundmöte med en skarp insikt om deras bransch snarare än att prata om mitt erbjudande. Hur gör jag det på ett trovärdigt sätt?" },
     { label: "Öppna med frågor", text: "Hur öppnar jag ett möte med kraftfulla frågor som direkt engagerar kunden och visar att jag förstår deras situation?" },
     { label: "Öppna med agenda", text: "Hur sätter jag en agenda för mötet som känns strukturerad men inte stel, och som ger mig kontroll över processen?" },
     { label: "Digitalt möte", text: "Det är stor skillnad att öppna ett videomöte jämfört med ett fysiskt möte. Hur skapar jag rätt stämning och engagemang digitalt?" },
     { label: "Efter lång tystnad", text: "Jag ska träffa en kund igen efter att affären legat still i månader. Hur öppnar jag mötet utan att det känns awkward?" }
+  ],
+  "chips-behov": [
+    { label: "Förbereda behovsanalysen", text: "Jag ska ha ett första kundmöte. Vilka frågeområden bör jag täcka (verksamhet, marknad och kunder, maktbas och organisation, viktigaste mål och utmaningar, vad som krävs för att nå målen, konkurrenter, krav på en samarbetspartner, hur kraven kan förändras och beslutsprocessen) och vilka öppna frågor ställer jag inom varje område?" },
+    { label: "Situationsfrågor", text: "Ge mig öppna, neutrala situationsfrågor som får kunden att berätta brett om sin verksamhet och sitt nuläge, utan att jag styr svaret." },
+    { label: "Styrfrågor", text: "Kunden har nämnt ett intressant område. Ge mig styrfrågor med när, var, hur, vem, vilka, vad och varför som fördjupar samtalet utan att vara ledande." },
+    { label: "Konsekvensfrågor", text: "Hur ställer jag konsekvensfrågor som får kunden att själv inse vad problemet kostar eller vad en förändring skulle ge, så att behovet blir tydligt och prioriterat?" },
+    { label: "Lösningsfrågor", text: "Ge mig lösningsfrågor som visar vad kunden tycker är viktigt med en eventuell lösning och som skapar engagemang kring den." },
+    { label: "Få accept på behovet", text: "Jag tror att jag har förstått kundens behov. Hur sammanfattar jag det och ställer acceptfrågan så att det är kunden som ger accepten och inte jag som ser behovet?" },
+    { label: "Dolda behov (isberget)", text: "Kunden pratar bara om uttalade krav och önskemål. Vilka frågor hjälper kunden att se de omedvetna och indirekta behoven under ytan?" },
+    { label: "Krav på samarbetspartner", text: "Vilka frågor ställer jag för att förstå kundens krav på en samarbetspartner, hur kraven kan förändras och hur beslutsprocessen går till?" }
   ],
   "chips-kopresa": [
     { label: "Kartlägg beslutsprocessen", text: "Jag behöver förstå hur kunden faktiskt fattar beslut internt — vem som är involverad, i vilken ordning, och vad som driver processen framåt. Hur kartlägger jag deras köpprocess?" },
@@ -500,7 +493,7 @@ const scenarios = {
     { label: "Kall eller distanserad kontakt", text: "En av mina viktigaste kontakter hos kunden har blivit mer distanserad och svarar inte lika snabbt längre. Något har förändrats. Hur hanterar jag det?" },
     { label: "Håll relationen varm", text: "Affären är stängd och nästa upphandling är 18 månader bort. Hur håller jag relationerna varma och förblir relevant utan att verka säljig under mellantiden?" },
     { label: "Nyckelkontakt slutar", text: "Min viktigaste kontakt och sponsor hos kunden har precis meddelat att hen slutar. Hur hanterar jag detta personbyte utan att tappa förankring och förtroende?" },
-    { label: "Bred förankring", text: "Jag har en stark relation med en person i kundorganisationen men är orolig för att vara för beroende av denna enda kontakt. Hur bygger jag bredare förankring?" },
+    { label: "Bredda maktbasen", text: "Jag har en stark relation med en person i kundorganisationen men är orolig för att vara för beroende av denna enda kontakt. Hur bygger jag bredare förankring?" },
     { label: "Utveckla individuella kontakter", text: "Jag har kontakter i maktbasen men relationerna är ytliga och transaktionella. Hur utvecklar jag djupare och mer genuina relationer med varje individ?" }
   ],
   "chips-forhandling": [
@@ -523,6 +516,25 @@ const scenarios = {
 };
 
 const advisors = [
+  {
+    id: "xplan", name: "Xplan", role: "Affärsrådgivarens vän", emoji: "✅", featured: true, acceptCheck: true,
+    tag: "Xplans metod", tagBg: "#9FE1CB", tagColor: "#085041", avatarBg: "#E1F5EE",
+    desc: "Utgår från Xplans säljmetodik. Hjälper dig styra mot de tre accepterna (behov, oss som samarbetspartner och lösning) från rätt personer i maktbasen, innan du går till offert. I Kundmöte, Köpresan & Maktbasen, Behovsanalys och Förhandling avslutas svaret med en accept-koll.",
+    persona: `Du är Xplan, en rådgivare som utgår från Xplans säljmetodik för komplex B2B-försäljning. Du coachar säljaren att styra mot tre accepter innan offert:
+1. Accept på behovet. Det är kunden som ger accepten, inte vi som ser behovet.
+2. Accept på oss som samarbetspartner, det vill säga på vårt företag och dess egenskaper.
+3. Accept på lösningen, att det vi skissat på verkar rätt för kunden.
+Accepterna ska komma från en eller flera personer i kundens maktbas. Utan rätt personer räknas de inte. De ska finnas i varje säljprocess innan vi går till offert. Det kan gå snabbt eller ta år. Att offerera utan dem är en vanlig orsak till affärer som stannar.
+
+Din metodik:
+- Säljprocessen: söka, identifiera, accept, förslag, avslut. Accepterna kommer när dialogen med rätt beslutsfattare är etablerad.
+- Linjen i kundmötet: 1 Inledning med STAM (syfte, tid, agenda, mål). 2 Behovsanalys. 3 Vi som samarbetspartner. 4 Lösningen på behovet. 5 Avslut med nästa steg och konkret överenskommelse. Styr mot accepterna och ta delaccepter under vägen. Målet med mötet är inte att informera.
+- Behovsanalys: tratten börjar brett ("Kan du berätta lite om...?") och smalnar av till ett tydligt ja eller nej. Situationsfrågor (öppna, neutrala), styrfrågor (när, var, hur, vem, vilka, vad, varför), konsekvensfrågor så att kunden själv kommer till insikt, lösningsfrågor och acceptfrågor ("Är det här något du vill att vi ska hjälpa dig med?"). Behoven är som ett isberg, medvetna och omedvetna. Identifiera, förstärk, tillfredsställ. Använd både faktafrågor (logik) och attitydfrågor (känsla). Neutrala frågor före ledande.
+- Argumentation kommer efter behovsanalysen, aldrig före. Använd USP och value proposition med EFI: egenskap, fördel, innebörd. Upprepa kundens behov, få accept på behovet, lägg fram argumentet och beskriv nyttan.
+- Maktbasen: ekonomisk beslutsfattare, stark beslutspåverkare, informationsbärare och verkställare. Relationsskalan går från minus 5 till plus 5.
+
+Hur du svarar: rak, konkret och pedagogisk. Hänvisa till rätt steg i metodiken. Du svarar alltid på svenska.`
+  },
   {
     id: "hopkins", name: "Tom Hopkins", role: "Affärsstängaren", emoji: "🎯",
     tag: "Avslutsmästaren", tagBg: "#FAC775", tagColor: "#633806", avatarBg: "#FAEEDA",
@@ -580,7 +592,8 @@ const advisors = [
   }
 ];
 
-const regularAdvisors = advisors.filter(a => !a.isSynthesisProfile);
+const featuredAdvisor = advisors.find(a => a.featured);
+const boardAdvisors = advisors.filter(a => !a.isSynthesisProfile && !a.featured);
 const synthesisAdvisor = advisors.find(a => a.isSynthesisProfile);
 
 let selected = new Set();
@@ -605,7 +618,7 @@ function renderScenarios() {
 
 function cardHTML(a) {
   return `
-    <div class="advisor-card${a.isSynthesisProfile ? ' synthesis-card' : ''}" id="card-${a.id}" onclick="toggleAdvisor('${a.id}')">
+    <div class="advisor-card${a.isSynthesisProfile ? ' synthesis-card' : ''}${a.featured ? ' featured' : ''}" id="card-${a.id}" onclick="toggleAdvisor('${a.id}')">
       <div class="check">
         <svg viewBox="0 0 10 8" fill="none"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
@@ -623,7 +636,8 @@ function cardHTML(a) {
 }
 
 function renderBoard() {
-  document.getElementById('advisorBoard').innerHTML = regularAdvisors.map(cardHTML).join('');
+  document.getElementById('advisorFeatured').innerHTML = cardHTML(featuredAdvisor);
+  document.getElementById('advisorBoard').innerHTML = boardAdvisors.map(cardHTML).join('');
   document.getElementById('advisorBoard2').innerHTML = cardHTML(synthesisAdvisor);
 }
 
@@ -636,10 +650,46 @@ function toggleAdvisor(id) {
 function updateUI() {
   const n = selected.size;
   document.getElementById('selHint').textContent = n === 0
-    ? 'Välj 1–9 rådgivare ovan'
+    ? 'Välj 1–10 rådgivare ovan'
     : `${n} rådgivare ${n > 1 ? 'valda' : 'vald'}`;
   document.getElementById('askBtn').disabled =
     n === 0 || document.getElementById('question').value.trim() === '';
+  updateMobileUI();
+  updateCatTabs();
+}
+
+// ── Scenariokategorier som flikar (laptop) ───────────────────────────
+function buildCatTabs() {
+  const bar = document.getElementById('catTabs');
+  const ids = Object.keys(scenarios);
+  ids.forEach(id => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cat-tab';
+    b.dataset.cat = id;
+    b.setAttribute('role', 'tab');
+    b.textContent = document.getElementById(id).previousElementSibling.textContent;
+    b.addEventListener('click', () => showCat(id));
+    bar.appendChild(b);
+  });
+  showCat(ids[0]);
+}
+
+function showCat(id) {
+  Object.keys(scenarios).forEach(cid => {
+    document.getElementById(cid).parentElement.hidden = cid !== id;
+  });
+  document.querySelectorAll('.cat-tab').forEach(t => {
+    const on = t.dataset.cat === id;
+    t.classList.toggle('on', on);
+    t.setAttribute('aria-selected', String(on));
+  });
+}
+
+function updateCatTabs() {
+  document.querySelectorAll('.cat-tab').forEach(t => {
+    t.classList.toggle('has', !!document.getElementById(t.dataset.cat).querySelector('.chip.active'));
+  });
 }
 
 document.getElementById('question').addEventListener('input', updateUI);
@@ -651,10 +701,12 @@ function clearAll() {
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   document.getElementById('responses').innerHTML = '';
   conversationHistory = [];
+  resetMobileScenarios();
   updateUI();
 }
 
-async function callAPI(apiKey, systemPrompt, messages) {
+// Anropar modellen med streaming. onText(textHittills) anropas medan svaret skrivs.
+async function callAPI(apiKey, systemPrompt, messages, withAccept, onText) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -666,18 +718,196 @@ async function callAPI(apiKey, systemPrompt, messages) {
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
       max_tokens: 2000,
-      system: systemPrompt,
+      stream: true,
+      system: systemPrompt + FORMAT_SUFFIX + (withAccept ? ACCEPT_SUFFIX : ''),
       messages
     })
   });
-  const data = await res.json();
-  if (data?.content?.[0]?.text) return data.content[0].text;
-  if (data?.error) throw new Error(`${data.error.type}: ${data.error.message}`);
-  throw new Error('Oväntat svar från API.');
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    if (data?.error) throw new Error(`${data.error.type}: ${data.error.message}`);
+    throw new Error(`API-fel ${res.status}`);
+  }
+
+  let text = '', buf = '';
+  const handle = block => {
+    const line = block.split('\n').find(l => l.startsWith('data:'));
+    if (!line) return;
+    let ev;
+    try { ev = JSON.parse(line.slice(5).trim()); } catch (e) { return; }
+    if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') {
+      text += ev.delta.text;
+      if (onText) onText(text);
+    } else if (ev.type === 'error') {
+      throw new Error(`${ev.error.type}: ${ev.error.message}`);
+    }
+  };
+  const feed = chunk => {
+    buf += chunk.replace(/\r\n/g, '\n');
+    const blocks = buf.split('\n\n');
+    buf = blocks.pop();
+    blocks.forEach(handle);
+  };
+
+  if (res.body && res.body.getReader) {
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      feed(dec.decode(value, { stream: true }));
+    }
+    feed(dec.decode());
+  } else {
+    feed(await res.text());
+  }
+  if (buf.trim()) handle(buf);
+
+  if (!text) throw new Error('Oväntat svar från API.');
+  return text;
 }
 
+// Uppdaterar ett svarskort medan texten strömmar in (högst var 50:e ms)
+function streamInto(el) {
+  let latest = '', timer = null, stopped = false;
+  const fn = text => {
+    latest = text;
+    if (timer || stopped) return;
+    timer = setTimeout(() => { timer = null; if (!stopped) renderAnswer(el, latest, true); }, 50);
+  };
+  fn.stop = () => { stopped = true; clearTimeout(timer); timer = null; };
+  return fn;
+}
+
+// ── Svarsformat: sammanfattning i tre punkter + längre förklaring ────
+const FORMAT_SUFFIX = `
+
+SVARSFORMAT (följ exakt):
+Börja med en rad som bara innehåller "## SAMMANFATTNING". Skriv därefter exakt tre punkter, var och en på en egen rad som börjar med "- ". Varje punkt är en enda kort mening (max 20 ord) som fångar det viktigaste, formulerad i din roll.
+Fortsätt sedan med en rad som bara innehåller "## FÖRKLARING" och därefter din längre, utvecklade förklaring i löpande text.
+Använd inga andra rubriker än de som anges här och ingen markdown-formatering som ** eller #.`;
+
+// Accept-kollen visas bara för Xplan-rådgivaren, och bara när det valda scenariot
+// ligger i någon av dessa kategorier (id:n på scenariokategorierna).
+const ACCEPT_CATS = ['chips-mote', 'chips-kopresa', 'chips-behov', 'chips-forhandling'];
+let lastScenarioCat = null;
+
+// Kategorin för det scenario som är valt just nu (chip på laptop, dropdown på mobil)
+function activeScenarioCategory() {
+  const chip = document.querySelector('.scenario-row .chip.active');
+  if (chip) return chip.parentElement.id;
+  const sel = document.querySelector('#mScenarios select.has');
+  return sel ? sel.id.replace(/^ms-/, '') : null;
+}
+
+const ACCEPT_SUFFIX = `
+
+ACCEPT-KOLL (ska alltid med):
+De tre accepterna enligt Xplan är accept på behovet, accept på oss som samarbetspartner och accept på lösningen. De ska komma från rätt personer i kundens maktbas och finnas innan offert.
+Avsluta efter förklaringen med en rad som bara innehåller "## ACCEPT-KOLL" och därefter exakt fyra rader i detta format:
+- Behov: <en fråga säljaren bör ställa sig>. Tecken: <hur man ser att accepten är på plats>.
+- Oss som partner: <en fråga>. Tecken: <tecken>.
+- Lösning: <en fråga>. Tecken: <tecken>.
+- Rätt person: <en fråga om accepten kommer från någon i kundens maktbas>. Tecken: <tecken>.
+Anpassa frågorna och tecknen till situationen. Bedöm inte att en accept är uppnådd om det inte framgår av det säljaren har berättat. Skriv i så fall vad som behövs för att veta.`;
+
+function parseAccept(block) {
+  const rows = block.split('\n').map(l => l.trim()).filter(l => /^[-•*]\s+/.test(l)).map(l => {
+    const body = l.replace(/^[-•*]\s+/, '').replace(/\*\*/g, '');
+    const m = body.match(/^([^:]+):\s*([\s\S]*?)\s*Tecken:\s*([\s\S]*)$/i);
+    return m ? { label: m[1].trim(), q: m[2].trim(), sign: m[3].trim() } : { label: '', q: body, sign: '' };
+  });
+  return rows.length ? rows : null;
+}
+
+function parseAnswer(text, partial) {
+  let accept = null;
+  const am = text.match(/\n\s*##\s*ACCEPT[\s-]*KOLL[^\n]*\n?([\s\S]*)$/i);
+  if (am) { accept = parseAccept(am[1]); text = text.slice(0, am.index); }
+  const m = text.match(/##\s*SAMMANFATTNING[^\n]*\n([\s\S]*?)(?:\n\s*##\s*F[ÖO]RKLARING[^\n]*\n?([\s\S]*))?$/i);
+  if (!m) return null;
+  const clean = s => s.replace(/\*\*/g, '').trim();
+  const isBullet = l => /^\s*(?:[-•*]|\d+[.)])\s+/.test(l);
+  const lines = m[1].split('\n');
+  const bullets = lines.filter(isBullet)
+    .map(l => clean(l.replace(/^\s*(?:[-•*]|\d+[.)])\s+/, ''))).filter(Boolean);
+  if (!bullets.length) return null;
+  const rest = clean(lines.filter(l => !isBullet(l) && !/^\s*##/.test(l)).join('\n'));
+  let details = [rest, clean(m[2] || '')].filter(Boolean).join('\n\n');
+  // Medan svaret strömmar in kan en rubrik vara halvskriven sist i texten
+  if (partial) details = details.replace(/\n?\s*#{1,2}[^\n]*$/, '').trim();
+  return { bullets, details, accept };
+}
+
+function renderAnswer(el, text, partial) {
+  const p = parseAnswer(text, partial);
+  if (!p) {
+    if (partial && text.length < 300) return;  // vänta tills formatet syns
+    el.className = 'response-body';
+    el.textContent = text;
+    return;
+  }
+  const wasOpen = el.classList.contains('expanded');
+  el.className = 'response-body structured' + (wasOpen ? ' expanded' : '');
+  el.textContent = '';
+
+  const box = document.createElement('div');
+  box.className = 'ans-summary';
+  const title = document.createElement('div');
+  title.className = 'ans-summary-title';
+  title.textContent = 'Det viktigaste';
+  const ul = document.createElement('ul');
+  p.bullets.forEach(b => { const li = document.createElement('li'); li.textContent = b; ul.appendChild(li); });
+  box.append(title, ul);
+  el.appendChild(box);
+
+  if (p.details) {
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'ans-toggle';
+    toggle.textContent = wasOpen ? 'Dölj förklaringen' : 'Visa hela svaret';
+    toggle.addEventListener('click', () => {
+      const open = el.classList.toggle('expanded');
+      toggle.textContent = open ? 'Dölj förklaringen' : 'Visa hela svaret';
+    });
+    el.appendChild(toggle);
+
+    const det = document.createElement('div');
+    det.className = 'ans-detail';
+    const lab = document.createElement('div');
+    lab.className = 'ans-label';
+    lab.textContent = 'Förklaring';
+    const txt = document.createElement('div');
+    txt.className = 'ans-text';
+    txt.textContent = p.details;
+    det.append(lab, txt);
+    el.appendChild(det);
+  }
+
+  if (p.accept) {
+    const mk = (tag, cls, text) => { const n = document.createElement(tag); n.className = cls; if (text) n.textContent = text; return n; };
+    const box = mk('div', 'ans-accept');
+    box.appendChild(mk('div', 'ans-accept-title', 'Har du säkerställt de tre accepterna?'));
+    p.accept.forEach(r => {
+      const row = mk('div', 'ans-accept-row');
+      if (r.label) row.appendChild(mk('div', 'ans-accept-label', r.label));
+      row.appendChild(mk('div', 'ans-accept-q', r.q));
+      if (r.sign) row.appendChild(mk('div', 'ans-accept-sign', 'Tecken: ' + r.sign));
+      box.appendChild(row);
+    });
+    el.appendChild(box);
+  }
+}
+
+let busy = false;
 async function askAdvisors() {
+  if (busy) return;
   if (!termsAccepted()) { openTerms(true); return; }
+  busy = true;
+  try { await askAdvisorsRun(); } finally { busy = false; }
+}
+
+async function askAdvisorsRun() {
   const question = document.getElementById('question').value.trim();
   const apiKey = document.getElementById('apiKey').value.trim();
   if (!apiKey) { alert('Ange din API-nyckel i fältet högst upp på sidan.'); return; }
@@ -685,6 +915,11 @@ async function askAdvisors() {
 
   // Spara nyckeln första gången användaren kör coaching
   if (loadSavedKey() !== apiKey) { saveKey(apiKey); updateClearLink(); }
+
+  // Följdfrågor behåller kategorin från frågan innan
+  const scenarioCat = activeScenarioCategory() || (conversationHistory.length > 0 ? lastScenarioCat : null);
+  lastScenarioCat = scenarioCat;
+  const acceptOn = ACCEPT_CATS.includes(scenarioCat);
 
   const btn = document.getElementById('askBtn');
   btn.disabled = true;
@@ -698,6 +933,10 @@ async function askAdvisors() {
     responsesEl.appendChild(hr);
     responsesEl.appendChild(lbl);
   }
+
+  const roundEl = document.createElement('div');
+  roundEl.className = 'round';
+  responsesEl.appendChild(roundEl);
 
   conversationHistory.push({ role: "user", content: question });
 
@@ -720,34 +959,36 @@ async function askAdvisors() {
       <div class="response-body loading" id="body-${a.id}">Tänker...</div>
       <div class="ans-foot">AI-genererat råd utan garanti. Kontrollera innan du agerar.</div>
     `;
-    responsesEl.appendChild(card);
+    roundEl.appendChild(card);
   });
+  buildTabs(roundEl);
+
+  // Visar ett strömmande svar i ett kort. Returnerar texten, eller null vid fel.
+  const runCard = async (bodyEl, systemPrompt, history, withAccept) => {
+    const st = streamInto(bodyEl);
+    try {
+      const text = await callAPI(apiKey, systemPrompt, history, withAccept, st);
+      st.stop();
+      renderAnswer(bodyEl, text);
+      return text;
+    } catch (e) {
+      st.stop();
+      bodyEl.className = 'response-body error';
+      bodyEl.textContent = `Fel: ${e.message}`;
+      return null;
+    }
+  };
 
   const advisorResponses = {};
-  await Promise.all(selectedRegular.map(async a => {
-    const bodyEl = document.getElementById('body-' + a.id);
-    try {
-      const text = await callAPI(apiKey, a.persona, conversationHistory);
-      bodyEl.className = 'response-body';
-      bodyEl.textContent = text;
-      advisorResponses[a.name] = text;
-    } catch (e) {
-      bodyEl.className = 'response-body error';
-      bodyEl.textContent = `Fel: ${e.message}`;
-    }
-  }));
+  // Sammanvävt råd behöver inte rådgivarnas svar, så det startar samtidigt med dem
+  const synthProfileP = hasSynthesisProfile
+    ? runCard(document.getElementById('body-' + synthesisAdvisor.id), synthesisAdvisor.persona, conversationHistory, false)
+    : null;
 
-  if (hasSynthesisProfile) {
-    const bodyEl = document.getElementById('body-' + synthesisAdvisor.id);
-    try {
-      const text = await callAPI(apiKey, synthesisAdvisor.persona, conversationHistory);
-      bodyEl.className = 'response-body';
-      bodyEl.textContent = text;
-    } catch (e) {
-      bodyEl.className = 'response-body error';
-      bodyEl.textContent = `Fel: ${e.message}`;
-    }
-  }
+  await Promise.all(selectedRegular.map(async a => {
+    const text = await runCard(document.getElementById('body-' + a.id), a.persona, conversationHistory, a.acceptCheck && acceptOn);
+    if (text) advisorResponses[a.name] = text;
+  }));
 
   if (hasMultipleRegular && Object.keys(advisorResponses).length >= 2) {
     const divider = document.createElement('div');
@@ -757,7 +998,7 @@ async function askAdvisors() {
       <div class="synthesis-divider-label">⚖️ Sammanvävt råd</div>
       <div class="synthesis-divider-line"></div>
     `;
-    responsesEl.appendChild(divider);
+    roundEl.appendChild(divider);
 
     const synthCard = document.createElement('div');
     synthCard.className = 'response-card synthesis-result';
@@ -772,10 +1013,11 @@ async function askAdvisors() {
       <div class="response-body loading" id="body-auto-synthesis">Väger samman perspektiven...</div>
       <div class="ans-foot">AI-genererat råd utan garanti. Kontrollera innan du agerar.</div>
     `;
-    responsesEl.appendChild(synthCard);
+    roundEl.appendChild(synthCard);
+    buildTabs(roundEl, synthCard);
 
     const advisorSummary = Object.entries(advisorResponses)
-      .map(([name, response]) => `### ${name}\n${response}`)
+      .map(([name, response]) => `### ${name}\n${response.replace(/\n\s*##\s*ACCEPT[\s-]*KOLL[\s\S]*$/i, '').trim()}`)
       .join('\n\n');
 
     const synthesisPrompt = `Du är en neutral och erfaren säljstrateg. Nedan finns råd om samma säljsituation från ${selectedRegular.length} olika rådgivare med olika perspektiv och metodik. Din uppgift är att:
@@ -794,15 +1036,10 @@ Frågan som ställdes: ${question}
 Rådgivarnas svar:
 ${advisorSummary}`;
 
-    try {
-      const synthText = await callAPI(apiKey, synthesisPrompt, [{ role: "user", content: "Gör din sammanvägda analys." }]);
-      document.getElementById('body-auto-synthesis').className = 'response-body';
-      document.getElementById('body-auto-synthesis').textContent = synthText;
-    } catch (e) {
-      document.getElementById('body-auto-synthesis').className = 'response-body error';
-      document.getElementById('body-auto-synthesis').textContent = `Fel: ${e.message}`;
-    }
+    await runCard(document.getElementById('body-auto-synthesis'), synthesisPrompt, [{ role: "user", content: "Gör din sammanvägda analys." }], false);
   }
+
+  if (synthProfileP) await synthProfileP;
 
   conversationHistory.push({ role: "assistant", content: `[Panelen svarade på: ${question}]` });
 
@@ -810,6 +1047,7 @@ ${advisorSummary}`;
   btn.textContent = 'Få coaching →';
   document.getElementById('question').value = '';
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  resetMobileScenarios();
   updateUI();
 }
 
@@ -840,9 +1078,205 @@ document.getElementById('clearKey').addEventListener('click', e => {
 });
 updateClearLink();
 
+// ── Mobilläge: steg för steg ─────────────────────────────────────────
+// Mobil-CSS:en ligger i <style id="mobileCss"> och gäller under 700 px.
+// ?mobil eller ?dator i adressen tvingar fram ett visst läge.
+const mobileCssEl = document.getElementById('mobileCss');
+(function () {
+  const p = new URLSearchParams(location.search);
+  if (p.has('mobil')) mobileCssEl.media = 'all';
+  else if (p.has('dator')) mobileCssEl.media = 'not all';
+})();
+const isMobile = () => window.matchMedia(mobileCssEl.media).matches;
+
+let step = 1;
+
+function setStep(n, push) {
+  step = n;
+  document.body.dataset.step = n;
+  document.getElementById('mTitle').textContent = { 1: 'Rådsbordet', 2: 'Rådgivare', 3: 'Svar' }[n];
+  document.getElementById('mAction').setAttribute('aria-label', n === 3 ? 'Rensa och börja om' : 'Inställningar');
+  if (push) history.pushState({ step: n }, '');
+  updateMobileUI();
+}
+
+function goToStepOne() {
+  const delta = step - 1;
+  setStep(1, false);
+  if (delta > 0) { try { history.go(-delta); } catch (e) {} }
+}
+
+function updateMobileUI() {
+  const n = selected.size;
+  const hasQuestion = document.getElementById('question').value.trim() !== '';
+  document.getElementById('mNext').disabled = !hasQuestion;
+  const go = document.getElementById('mGo');
+  go.disabled = n === 0 || !hasQuestion;
+  go.textContent = n > 0 ? `Få coaching (${n})` : 'Välj minst en rådgivare';
+  document.getElementById('mCount').textContent = `${n} ${n === 1 ? 'vald' : 'valda'}`;
+}
+
+function buildMobileScenarios() {
+  const wrap = document.getElementById('mScenarios');
+  Object.entries(scenarios).forEach(([id, chips]) => {
+    const field = document.createElement('div');
+    field.className = 'm-field';
+    const label = document.createElement('label');
+    label.htmlFor = 'ms-' + id;
+    label.textContent = document.getElementById(id).previousElementSibling.textContent;
+    const sel = document.createElement('select');
+    sel.id = 'ms-' + id;
+    sel.add(new Option('Välj scenario…', ''));
+    chips.forEach((c, i) => sel.add(new Option(c.label, String(i))));
+    sel.addEventListener('change', () => {
+      resetMobileScenarios(sel);
+      if (sel.value === '') { sel.classList.remove('has'); return; }
+      sel.classList.add('has');
+      document.getElementById('question').value = chips[Number(sel.value)].text;
+      updateUI();
+    });
+    field.append(label, sel);
+    wrap.appendChild(field);
+  });
+}
+
+function resetMobileScenarios(except) {
+  document.querySelectorAll('#mScenarios select').forEach(s => {
+    if (s !== except) { s.value = ''; s.classList.remove('has'); }
+  });
+}
+
+function applyMobileDefault() {
+  if (isMobile() && selected.size === 0) toggleAdvisor('synthesis_profile');
+}
+
+function tabLabel(card) {
+  if (card.querySelector('#body-auto-synthesis')) return 'Panelens syntes';
+  if (card.classList.contains('synthesis-result')) return 'Syntes';
+  return card.querySelector('.response-name').textContent.replace(/^Dr\.\s*/, '').split(' ')[0];
+}
+
+function buildTabs(round, focusCard) {
+  const tabs = document.getElementById('mTabs');
+  const cards = [...round.querySelectorAll('.response-card')];
+  const isSynth = c => c.classList.contains('synthesis-result');
+  const ordered = [...cards.filter(isSynth), ...cards.filter(c => !isSynth(c))];
+  const active = focusCard || cards.find(c => c.classList.contains('m-active')) || ordered[0];
+  cards.forEach(c => c.classList.toggle('m-active', c === active));
+  tabs.textContent = '';
+  ordered.forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'm-tab' + (c === active ? ' on' : '');
+    b.textContent = tabLabel(c);
+    b.addEventListener('click', () => {
+      cards.forEach(x => x.classList.toggle('m-active', x === c));
+      tabs.querySelectorAll('.m-tab').forEach(t => t.classList.toggle('on', t === b));
+    });
+    tabs.appendChild(b);
+  });
+  tabs.hidden = cards.length < 2;
+}
+
+const openSheet = () => document.body.classList.add('sheet-open');
+const closeSheet = () => document.body.classList.remove('sheet-open');
+
+function showDesc(id) {
+  const a = advisors.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('descName').textContent = a.name;
+  document.getElementById('descRole').textContent = a.role;
+  const tag = document.getElementById('descTag');
+  tag.textContent = a.tag;
+  tag.style.background = a.tagBg;
+  tag.style.color = a.tagColor;
+  document.getElementById('descText').textContent = a.desc;
+  document.getElementById('descSheet').hidden = false;
+}
+
+function mobileAsk() {
+  if (busy) return;
+  if (!termsAccepted()) { openTerms(true); return; }
+  if (!document.getElementById('apiKey').value.trim()) {
+    openSheet();
+    setTimeout(() => document.getElementById('apiKey').focus(), 50);
+    return;
+  }
+  if (!document.getElementById('question').value.trim() || selected.size === 0) return;
+  setStep(3, step < 3);
+  askAdvisors();
+}
+
+function initMobile() {
+  buildMobileScenarios();
+  history.replaceState({ step: 1 }, '');
+  setStep(1, false);
+  applyMobileDefault();
+
+  window.addEventListener('popstate', e => {
+    let s = (e.state && e.state.step) || 1;
+    if (s === 2 && document.getElementById('question').value.trim() === '') s = 1;
+    setStep(s, false);
+  });
+
+  document.getElementById('mNext').addEventListener('click', () => {
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    setStep(2, true);
+  });
+  document.getElementById('mGo').addEventListener('click', mobileAsk);
+  document.getElementById('mBack').addEventListener('click', goToStepOne);
+  document.getElementById('mAction').addEventListener('click', () => {
+    if (step === 3) {
+      clearAll();
+      document.getElementById('mTabs').textContent = '';
+      applyMobileDefault();
+      goToStepOne();
+    } else {
+      openSheet();
+    }
+  });
+
+  const follow = document.getElementById('mFollow');
+  const sendFollow = () => {
+    const v = follow.value.trim();
+    if (!v || busy) return;
+    document.getElementById('question').value = v;
+    follow.value = '';
+    updateUI();
+    mobileAsk();
+  };
+  document.getElementById('mSend').addEventListener('click', sendFollow);
+  follow.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendFollow(); } });
+
+  document.getElementById('sheetClose').addEventListener('click', closeSheet);
+  document.getElementById('sheetBackdrop').addEventListener('click', closeSheet);
+
+  const descSheet = document.getElementById('descSheet');
+  const closeDesc = () => { descSheet.hidden = true; };
+  document.getElementById('descClose').addEventListener('click', closeDesc);
+  descSheet.addEventListener('click', e => { if (e.target === descSheet) closeDesc(); });
+
+  // Långtryck på en rådgivare visar beskrivningen; vanligt tryck väljer/avväljer
+  const wrap = document.getElementById('advisorWrap');
+  let lpTimer = null, lpFired = false;
+  const cancelLp = () => clearTimeout(lpTimer);
+  wrap.addEventListener('pointerdown', e => {
+    if (!isMobile()) return;
+    const card = e.target.closest('.advisor-card');
+    if (!card) return;
+    lpFired = false;
+    lpTimer = setTimeout(() => { lpFired = true; showDesc(card.id.replace('card-', '')); }, 500);
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => wrap.addEventListener(t, cancelLp));
+  wrap.addEventListener('click', e => {
+    if (lpFired) { e.stopPropagation(); e.preventDefault(); lpFired = false; }
+  }, true);
+  wrap.addEventListener('contextmenu', e => { if (isMobile()) e.preventDefault(); });
+}
+
 // ── Villkor och ansvarsfriskrivning ──────────────────────────────────
 // Byt TERMS_VERSION när texten i villkoren ändras, då måste alla godkänna igen.
-const TERMS_VERSION = 'v1-2026-10';
+const TERMS_VERSION = 'v2-2026-10';
 const TERMS_STORAGE = 'radsbordet.terms';
 let termsSession = false;
 
@@ -888,14 +1322,17 @@ function initTerms() {
   });
   document.querySelectorAll('.terms-link, #termsLinkBanner').forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
+    closeSheet();
     openTerms(!termsAccepted());
   }));
   if (!termsAccepted()) openTerms(true);
 }
 
 renderScenarios();
+buildCatTabs();
 renderBoard();
 updateUI();
+initMobile();
 initTerms();
 
 // ── PWA: service worker ──────────────────────────────────────────────
@@ -905,6 +1342,5 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-
-
-</body></html>
+</body>
+</html>
