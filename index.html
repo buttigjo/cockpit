@@ -334,7 +334,7 @@
 
   <header>
     <h1>Cockpit för Affärsrådgivare</h1>
-    <p>Få omedelbar coaching från ditt virtuella expertpanel</p>
+    <p>Få omedelbar coaching från din virtuella expertpanel</p>
   </header>
 
   <div class="m-scenarios" id="mScenarios"></div>
@@ -350,12 +350,12 @@
     <div class="scenario-row" id="chips-mote"></div>
   </div>
   <div class="scenario-section" style="margin-top:10px;">
-    <div class="scenario-label">Köpresan &amp; Maktbasen</div>
-    <div class="scenario-row" id="chips-kopresa"></div>
-  </div>
-  <div class="scenario-section" style="margin-top:10px;">
     <div class="scenario-label">Behovsanalys</div>
     <div class="scenario-row" id="chips-behov"></div>
+  </div>
+  <div class="scenario-section" style="margin-top:10px;">
+    <div class="scenario-label">Köpresan &amp; Maktbasen</div>
+    <div class="scenario-row" id="chips-kopresa"></div>
   </div>
   <div class="scenario-section" style="margin-top:10px;">
     <div class="scenario-label">Relationsresan</div>
@@ -421,7 +421,7 @@
       <p>Svaren skapas av en AI-modell. De kan vara ofullständiga, felaktiga eller olämpliga för din situation. De är allmänna idéer för reflektion och träning, inte professionell, juridisk, ekonomisk eller annan rådgivning, och de tar inte hänsyn till alla omständigheter i ditt enskilda fall. Använd ditt eget omdöme och kontrollera råden innan du agerar.</p>
 
       <h3>3. Ansvar</h3>
-      <p>Cockpit tillhandahålls i befintligt skick och utan garantier av något slag. Du ansvarar själv för hur du använder råden och för de beslut och handlingar du vidtar. Xplan Affärsutveckling AB ansvarar inte, i den utsträckning lagen tillåter, för skada, förlust, utebliven affär eller andra konsekvenser som uppstår av att verktyget eller råden används, eller av fel, avbrott eller ändringar i verktyget. Inget i dessa villkor begränsar ansvar som enligt tvingande lag inte kan begränsas.</p>
+      <p>Cockpit tillhandahålls i befintligt skick och utan garantier av något slag. Du ansvarar själv för hur du använder råden och för de beslut och handlingar du vidtar. Xplan Affärsutveckling AB och Crementis AB ansvarar inte, i den utsträckning lagen tillåter, för skada, förlust, utebliven affär eller andra konsekvenser som uppstår av att verktyget eller råden används, eller av fel, avbrott eller ändringar i verktyget. Inget i dessa villkor begränsar ansvar som enligt tvingande lag inte kan begränsas.</p>
 
       <h3>4. Rådgivarna är roller</h3>
       <p>Rådgivarna är AI-roller som speglar kända säljmetoder och perspektiv. De är inte uttalanden från, och inte godkända av, de personer eller organisationer vars metoder de hänvisar till.</p>
@@ -429,7 +429,10 @@
       <h3>5. Din API-nyckel</h3>
       <p>Du använder din egen API-nyckel. Du ansvarar för dess säkerhet och för de kostnader som uppstår. Nyckeln, och uppgiften att du godkänt villkoren, sparas bara i din webbläsare på den här enheten.</p>
 
-      <h3>6. Ändringar</h3>
+      <h3>6. Rättigheter</h3>
+      <p>Rättigheterna till Cockpit för Affärsrådgivare, inklusive texter, rådgivarroller, instruktioner och design, innehas av Crementis AB. Alla rättigheter förbehållna.</p>
+
+      <h3>7. Ändringar</h3>
       <p>Villkoren kan ändras. Du får då läsa och godkänna dem igen.</p>
     </div>
     <label class="terms-check" id="termsCheckRow"><input type="checkbox" id="termsCheck"> <span>Jag har läst och förstått villkoren och godkänner dem.</span></label>
@@ -465,16 +468,6 @@ const scenarios = {
     { label: "Digitalt möte", text: "Det är stor skillnad att öppna ett videomöte jämfört med ett fysiskt möte. Hur skapar jag rätt stämning och engagemang digitalt?" },
     { label: "Efter lång tystnad", text: "Jag ska träffa en kund igen efter att affären legat still i månader. Hur öppnar jag mötet utan att det känns awkward?" }
   ],
-  "chips-kopresa": [
-    { label: "Kartlägg beslutsprocessen", text: "Jag behöver förstå hur kunden faktiskt fattar beslut internt — vem som är involverad, i vilken ordning, och vad som driver processen framåt. Hur kartlägger jag deras köpprocess?" },
-    { label: "Identifiera maktbasen", text: "Jag är ny i en kundrelation och behöver förstå vem som egentligen har makt och inflytande i organisationen. Hur kartlägger jag maktbasen på ett systematiskt sätt?" },
-    { label: "Utvärdera maktbasen", text: "Jag har identifierat ett antal nyckelkontakter hos kunden men vet inte hur jag ska bedöma deras faktiska inflytande, inställning till oss och potential. Hur utvärderar jag maktbasen?" },
-    { label: "Interna blockerare", text: "Kunden verkar köpvillig men processen stannar internt — någon eller något blockerar beslutet. Hur identifierar och hanterar jag interna blockerare hos kunden?" },
-    { label: "Bygga intern konsensus", text: "Det finns flera intressenter med delvis motstridiga agendor hos kunden. Hur hjälper jag min kontakt att bygga intern konsensus och driva processen framåt?" },
-    { label: "Förenkla kundens beslut", text: "Kunden verkar överväldigad av beslutet — för många alternativ, för mycket risk, för komplex intern process. Hur förenklar jag deras beslutssituation?" },
-    { label: "Kunden är redan informerad", text: "Kunden har gjort 80% av sin research innan vi träffas första gången. De vet redan vad de vill ha. Hur möter jag dem där de är och tillför värde?" },
-    { label: "Motstridiga intressenter", text: "Jag har flera kontakter hos kunden med olika prioriteringar och delvis motstridiga intressen. Hur navigerar jag mellan dem utan att förlora någon?" }
-  ],
   "chips-behov": [
     { label: "Förbereda behovsanalysen", text: "Jag ska ha ett första kundmöte. Vilka frågeområden bör jag täcka (verksamhet, marknad och kunder, maktbas och organisation, viktigaste mål och utmaningar, vad som krävs för att nå målen, konkurrenter, krav på en samarbetspartner, hur kraven kan förändras och beslutsprocessen) och vilka öppna frågor ställer jag inom varje område?" },
     { label: "Situationsfrågor", text: "Ge mig öppna, neutrala situationsfrågor som får kunden att berätta brett om sin verksamhet och sitt nuläge, utan att jag styr svaret." },
@@ -485,12 +478,22 @@ const scenarios = {
     { label: "Dolda behov (isberget)", text: "Kunden pratar bara om uttalade krav och önskemål. Vilka frågor hjälper kunden att se de omedvetna och indirekta behoven under ytan?" },
     { label: "Krav på samarbetspartner", text: "Vilka frågor ställer jag för att förstå kundens krav på en samarbetspartner, hur kraven kan förändras och hur beslutsprocessen går till?" }
   ],
+  "chips-kopresa": [
+    { label: "Kartlägg beslutsprocessen", text: "Jag behöver förstå hur kunden faktiskt fattar beslut internt — vem som är involverad, i vilken ordning, och vad som driver processen framåt. Hur kartlägger jag deras köpprocess?" },
+    { label: "Identifiera maktbasen", text: "Jag är ny i en kundrelation och behöver förstå vem som egentligen har makt och inflytande i organisationen. Hur kartlägger jag maktbasen på ett systematiskt sätt?" },
+    { label: "Utvärdera maktbasen", text: "Jag har identifierat ett antal nyckelkontakter hos kunden men vet inte hur jag ska bedöma deras faktiska inflytande, inställning till oss och potential. Hur utvärderar jag maktbasen?" },
+    { label: "Interna blockerare", text: "Kunden verkar köpvillig men processen stannar internt — någon eller något blockerar beslutet. Hur identifierar och hanterar jag interna blockerare hos kunden?" },
+    { label: "Bygga intern konsensus", text: "Det finns flera intressenter med delvis motstridiga agendor hos kunden. Hur hjälper jag min kontakt att bygga intern konsensus och driva processen framåt?" },
+    { label: "Förenkla kundens beslut", text: "Kunden verkar överväldigad av beslutet — för många alternativ, för mycket risk, för komplex intern process. Hur förenklar jag deras beslutssituation?" },
+    { label: "Kunden är redan informerad", text: "Kunden har gjort 80% av sin research innan vi träffas första gången. De vet redan vad de vill ha. Hur möter jag dem där de är och tillför värde?" },
+    { label: "Motstridiga intressenter", text: "Jag har flera kontakter hos kunden med olika prioriteringar och delvis motstridiga intressen. Hur navigerar jag mellan dem utan att förlora någon?" }
+  ],
   "chips-relation": [
     { label: "Från kontakt till sponsor", text: "Jag har en kontakt hos kunden som verkar positiv till oss men som inte aktivt förespråkar oss internt. Hur lyfter jag den personen till att bli en verklig sponsor och champion för oss?" },
     { label: "Kall eller distanserad kontakt", text: "En av mina viktigaste kontakter hos kunden har blivit mer distanserad och svarar inte lika snabbt längre. Något har förändrats. Hur hanterar jag det?" },
     { label: "Håll relationen varm", text: "Affären är stängd och nästa upphandling är 18 månader bort. Hur håller jag relationerna varma och förblir relevant utan att verka säljig under mellantiden?" },
     { label: "Nyckelkontakt slutar", text: "Min viktigaste kontakt och sponsor hos kunden har precis meddelat att hen slutar. Hur hanterar jag detta personbyte utan att tappa förankring och förtroende?" },
-    { label: "Bred förankring", text: "Jag har en stark relation med en person i kundorganisationen men är orolig för att vara för beroende av denna enda kontakt. Hur bygger jag bredare förankring?" },
+    { label: "Bredda maktbasen", text: "Jag har en stark relation med en person i kundorganisationen men är orolig för att vara för beroende av denna enda kontakt. Hur bygger jag bredare förankring?" },
     { label: "Utveckla individuella kontakter", text: "Jag har kontakter i maktbasen men relationerna är ytliga och transaktionella. Hur utvecklar jag djupare och mer genuina relationer med varje individ?" }
   ],
   "chips-forhandling": [
@@ -1273,7 +1276,7 @@ function initMobile() {
 
 // ── Villkor och ansvarsfriskrivning ──────────────────────────────────
 // Byt TERMS_VERSION när texten i villkoren ändras, då måste alla godkänna igen.
-const TERMS_VERSION = 'v1-2026-10';
+const TERMS_VERSION = 'v2-2026-10';
 const TERMS_STORAGE = 'cockpit.terms';
 let termsSession = false;
 
