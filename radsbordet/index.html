@@ -41,7 +41,8 @@
     .api-banner a { color: #7a5800; }
     .api-banner .key-clear { font-size: 12px; text-decoration: underline; cursor: pointer; white-space: nowrap; }
 
-    header { margin-bottom: 1.5rem; }
+    header { margin-bottom: 1.5rem; display: flex; align-items: center; gap: 14px; }
+    .logo { width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0; }
     header h1 { font-size: 22px; font-weight: 600; color: #1a1a1a; }
     header p { font-size: 14px; color: #666; margin-top: 4px; }
 
@@ -219,6 +220,8 @@
     /* Toppfält */
     .m-header { display: flex; align-items: center; gap: 2px; padding: calc(4px + env(safe-area-inset-top)) 6px 2px 14px; min-height: 52px; flex-shrink: 0; }
     body:not([data-step="1"]) .m-header { padding-left: 2px; }
+    .m-logo { display: none; width: 30px; height: 30px; border-radius: 8px; margin-right: 10px; }
+    body[data-step="1"] .m-logo { display: block; }
     .m-title { flex: 1; font-size: 18px; font-weight: 600; }
     .m-count { display: none; font-size: 13px; color: #777; margin-right: 2px; }
     body[data-step="2"] .m-count { display: block; }
@@ -314,6 +317,7 @@
 
   <div class="m-header">
     <button class="m-icon" id="mBack" type="button" aria-label="Tillbaka"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 5 8 12 15 19"/></svg></button>
+    <img class="logo m-logo" src="icon-192.png" alt="" width="30" height="30">
     <div class="m-title" id="mTitle">Rådsbordet</div>
     <span class="m-count" id="mCount"></span>
     <button class="m-icon" id="mAction" type="button" aria-label="Inställningar">
@@ -333,8 +337,11 @@
   </div>
 
   <header>
-    <h1>Rådsbordet</h1>
-    <p>Din panel inför och i kundmötet</p>
+    <img class="logo" src="icon-192.png" alt="" width="44" height="44">
+    <div>
+      <h1>Rådsbordet</h1>
+      <p>Din panel inför och i kundmötet</p>
+    </div>
   </header>
 
   <div class="m-scenarios" id="mScenarios"></div>
