@@ -715,9 +715,32 @@ function clearAll() {
 }
 
 // Anropar modellen med streaming. onText(textHittills) anropas medan svaret skrivs.
+// Vaktar anropet: kommer inget alls från tjänsten på STALL_MS avbryts det (så att inget står och tänker i det oändliga)
+let STALL_MS = 30000;
 async function callAPI(apiKey, systemPrompt, messages, withAccept, onText, plain) {
+  const ctrl = new AbortController();
+  let wd = null;
+  const alive = () => { clearTimeout(wd); wd = setTimeout(() => ctrl.abort(), STALL_MS); };
+  alive();
+  try {
+    return await callAPIOnce(apiKey, systemPrompt, messages, withAccept, onText, plain, ctrl.signal, alive);
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      const s = new Error(`Ingen kontakt med tjänsten på ${Math.round(STALL_MS / 1000)} sekunder`);
+      s.stalled = true;
+      throw s;
+    }
+    if (e instanceof TypeError) e.stalled = true;  // nätverksfel, t.ex. Failed to fetch
+    throw e;
+  } finally {
+    clearTimeout(wd);
+  }
+}
+
+async function callAPIOnce(apiKey, systemPrompt, messages, withAccept, onText, plain, signal, alive) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
+    signal,
     headers: {
       "Content-Type": "application/json",
       "x-api-key": apiKey,
@@ -732,6 +755,7 @@ async function callAPI(apiKey, systemPrompt, messages, withAccept, onText, plain
       messages
     })
   });
+  alive();
   if (!res.ok) {
     const data = await res.json().catch(() => null);
     if (data?.error) throw new Error(`${data.error.type}: ${data.error.message}`);
@@ -763,6 +787,7 @@ async function callAPI(apiKey, systemPrompt, messages, withAccept, onText, plain
     const dec = new TextDecoder();
     while (true) {
       const { done, value } = await reader.read();
+      alive();
       if (done) break;
       feed(dec.decode(value, { stream: true }));
     }
@@ -981,8 +1006,27 @@ async function askAdvisorsRun() {
   const runCard = async (bodyEl, systemPrompt, history, withAccept) => {
     const st = streamInto(bodyEl);
     const base = history.slice();
+    // Visar hur länge vi väntat, så att det syns att något händer
+    const label = bodyEl.textContent.replace(/(\.+|…)$/, '');
+    const started = Date.now();
+    const tick = setInterval(() => {
+      const s = Math.round((Date.now() - started) / 1000);
+      if (s >= 5 && bodyEl.classList.contains('loading') && !bodyEl.dataset.retry) bodyEl.textContent = `${label}… ${s} s`;
+    }, 1000);
     try {
-      const text = await callAPI(apiKey, systemPrompt, history, withAccept, st);
+      let text;
+      for (let attempt = 1; ; attempt++) {
+        try {
+          text = await callAPI(apiKey, systemPrompt, history, withAccept, st);
+          break;
+        } catch (e) {
+          if (!e.stalled || attempt >= 2) throw e;
+          bodyEl.className = 'response-body loading';
+          bodyEl.dataset.retry = '1';
+          bodyEl.textContent = 'Tappade kontakten, försöker igen…';
+        }
+      }
+      clearInterval(tick);
       st.stop();
       renderAnswer(bodyEl, text);
       // Kortet minns frågan och svaret, så en följdfråga kan bygga vidare på dem
@@ -990,6 +1034,7 @@ async function askAdvisorsRun() {
       if (card) card._ctx = { system: systemPrompt, messages: base.concat({ role: 'assistant', content: text }) };
       return text;
     } catch (e) {
+      clearInterval(tick);
       st.stop();
       bodyEl.className = 'response-body error';
       bodyEl.textContent = `Fel: ${e.message}`;
