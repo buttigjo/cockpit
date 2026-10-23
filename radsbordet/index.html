@@ -139,6 +139,8 @@
     .synthesis-divider-label { font-size: 11px; color: #2E9A83; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
 
     .section-divider { border: none; border-top: 1px solid #e5e5e5; margin: 1.75rem 0 0; }
+    .followup-q { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e5e5; font-size: 13px; font-weight: 600; color: #02735E; }
+    .followup-a { margin-top: 6px; }
     .followup-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin: 0.75rem 0; }
 
     @media (max-width: 620px) {
@@ -713,7 +715,7 @@ function clearAll() {
 }
 
 // Anropar modellen med streaming. onText(textHittills) anropas medan svaret skrivs.
-async function callAPI(apiKey, systemPrompt, messages, withAccept, onText) {
+async function callAPI(apiKey, systemPrompt, messages, withAccept, onText, plain) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -724,9 +726,9 @@ async function callAPI(apiKey, systemPrompt, messages, withAccept, onText) {
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
-      max_tokens: 2000,
+      max_tokens: plain ? 1000 : 2000,
       stream: true,
-      system: systemPrompt + FORMAT_SUFFIX + (withAccept ? ACCEPT_SUFFIX : ''),
+      system: systemPrompt + (plain ? FOLLOW_SUFFIX : FORMAT_SUFFIX + (withAccept ? ACCEPT_SUFFIX : '')),
       messages
     })
   });
@@ -793,6 +795,11 @@ SVARSFORMAT (följ exakt):
 Börja med en rad som bara innehåller "## SAMMANFATTNING". Skriv därefter exakt tre punkter, var och en på en egen rad som börjar med "- ". Varje punkt är en enda kort mening (max 20 ord) som fångar det viktigaste, formulerad i din roll.
 Fortsätt sedan med en rad som bara innehåller "## FÖRKLARING" och därefter din längre, utvecklade förklaring i löpande text.
 Använd inga andra rubriker än de som anges här och ingen markdown-formatering som ** eller #.`;
+
+// Följdfrågor på mobilen: kort svar i löpande text från den rådgivare du tittar på
+const FOLLOW_SUFFIX = `
+
+Det här är en följdfråga i samma samtal. Svara kort och konkret (högst ca 150 ord) i löpande text och i din roll. Bygg på ditt tidigare svar. Använd inga rubriker och ingen markdown som ** eller #.`;
 
 // Accept-kollen visas bara för Xplan-rådgivaren, och bara när det valda scenariot
 // ligger i någon av dessa kategorier (id:n på scenariokategorierna).
@@ -973,10 +980,14 @@ async function askAdvisorsRun() {
   // Visar ett strömmande svar i ett kort. Returnerar texten, eller null vid fel.
   const runCard = async (bodyEl, systemPrompt, history, withAccept) => {
     const st = streamInto(bodyEl);
+    const base = history.slice();
     try {
       const text = await callAPI(apiKey, systemPrompt, history, withAccept, st);
       st.stop();
       renderAnswer(bodyEl, text);
+      // Kortet minns frågan och svaret, så en följdfråga kan bygga vidare på dem
+      const card = bodyEl.closest('.response-card');
+      if (card) card._ctx = { system: systemPrompt, messages: base.concat({ role: 'assistant', content: text }) };
       return text;
     } catch (e) {
       st.stop();
@@ -1179,10 +1190,12 @@ function buildTabs(round, focusCard) {
     b.addEventListener('click', () => {
       cards.forEach(x => x.classList.toggle('m-active', x === c));
       tabs.querySelectorAll('.m-tab').forEach(t => t.classList.toggle('on', t === b));
+      updateFollowPlaceholder();
     });
     tabs.appendChild(b);
   });
   tabs.hidden = cards.length < 2;
+  updateFollowPlaceholder();
 }
 
 const openSheet = () => document.body.classList.add('sheet-open');
@@ -1199,6 +1212,68 @@ function showDesc(id) {
   tag.style.color = a.tagColor;
   document.getElementById('descText').textContent = a.desc;
   document.getElementById('descSheet').hidden = false;
+}
+
+// ── Följdfråga (mobil): går direkt till rådgivaren du tittar på ─────
+let followBusy = false;
+
+function activeCard() {
+  const rounds = document.querySelectorAll('#responses .round');
+  const round = rounds[rounds.length - 1];
+  return round ? round.querySelector('.response-card.m-active') : null;
+}
+
+function updateFollowPlaceholder() {
+  const card = activeCard();
+  const name = card ? card.querySelector('.response-name').textContent.replace(/^Dr\.\s*/, '') : '';
+  document.getElementById('mFollow').placeholder = name ? `Följdfråga till ${name}…` : 'Följdfråga…';
+}
+
+function followHint(msg) {
+  const f = document.getElementById('mFollow');
+  f.placeholder = msg;
+  setTimeout(updateFollowPlaceholder, 2500);
+}
+
+async function askFollowUp(question) {
+  const card = activeCard();
+  if (!card || !card._ctx) { followHint('Vänta tills svaret är klart…'); return; }
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { openSheet(); return; }
+  followBusy = true;
+  const send = document.getElementById('mSend');
+  send.disabled = true;
+  const foot = card.querySelector('.ans-foot');
+  const q = document.createElement('div');
+  q.className = 'followup-q';
+  q.textContent = question;
+  const a = document.createElement('div');
+  a.className = 'response-body followup-a loading';
+  a.textContent = 'Tänker...';
+  card.insertBefore(q, foot);
+  card.insertBefore(a, foot);
+  q.scrollIntoView({ block: 'start', behavior: 'smooth' });
+
+  let latest = '', timer = null;
+  const onText = text => {
+    latest = text;
+    if (timer) return;
+    timer = setTimeout(() => { timer = null; a.className = 'response-body followup-a'; a.textContent = latest; }, 50);
+  };
+  try {
+    const text = await callAPI(apiKey, card._ctx.system, card._ctx.messages.concat({ role: 'user', content: question }), false, onText, true);
+    clearTimeout(timer);
+    a.className = 'response-body followup-a';
+    a.textContent = text;
+    card._ctx.messages.push({ role: 'user', content: question }, { role: 'assistant', content: text });
+  } catch (e) {
+    clearTimeout(timer);
+    a.className = 'response-body followup-a error';
+    a.textContent = `Fel: ${e.message}`;
+  } finally {
+    followBusy = false;
+    send.disabled = false;
+  }
 }
 
 function mobileAsk() {
@@ -1246,11 +1321,10 @@ function initMobile() {
   const follow = document.getElementById('mFollow');
   const sendFollow = () => {
     const v = follow.value.trim();
-    if (!v || busy) return;
-    document.getElementById('question').value = v;
+    if (!v) return;
+    if (busy || followBusy) { followHint('Vänta tills svaret är klart…'); return; }
     follow.value = '';
-    updateUI();
-    mobileAsk();
+    askFollowUp(v);
   };
   document.getElementById('mSend').addEventListener('click', sendFollow);
   follow.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendFollow(); } });
